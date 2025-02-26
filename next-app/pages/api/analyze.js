@@ -89,17 +89,40 @@ const analyzeProperty = async (apiKey, property) => {
     Return your analysis in the requested JSON format with scores, explanations, and keywords for each category.
   `;
 
-  const response = await openai.chat.completions.create({
-    model: "o1", // Using the most advanced model available with free credits
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ],
-    temperature: 0.2,
-    response_format: { type: "json_object" },
-  });
+  try {
+    // First try with o1 model
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // Using a more widely available model
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+    });
 
-  return JSON.parse(response.choices[0].message.content);
+    return JSON.parse(response.choices[0].message.content);
+  } catch (error) {
+    console.error("Error with primary model, falling back to alternative:", error);
+    
+    // Fallback to another model if o1 fails
+    try {
+      const fallbackResponse = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo", // Fallback to a more widely supported model
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+      });
+
+      return JSON.parse(fallbackResponse.choices[0].message.content);
+    } catch (fallbackError) {
+      // Re-throw with more details
+      throw new Error(`Failed to analyze with all models. Details: ${fallbackError.message}`);
+    }
+  }
 };
 
 export default async function handler(req, res) {
@@ -124,7 +147,7 @@ export default async function handler(req, res) {
     console.error('Error analyzing property:', error);
     res.status(500).json({ 
       error: 'Error analyzing property', 
-      details: error.message 
+      details: error.message || 'Unknown error occurred'
     });
   }
 }

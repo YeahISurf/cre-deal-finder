@@ -38,7 +38,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to analyze property');
+        throw new Error(errorData.error + (errorData.details ? ': ' + errorData.details : ''));
       }
 
       const data = await response.json();

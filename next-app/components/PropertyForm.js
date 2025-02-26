@@ -43,7 +43,7 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
   useEffect(() => {
     if (formType === 'sample') {
       setProperty(SAMPLE_PROPERTY);
-    } else if (formType === 'manual' && property === SAMPLE_PROPERTY) {
+    } else if (formType === 'manual' && JSON.stringify(property) === JSON.stringify(SAMPLE_PROPERTY)) {
       // Only clear if currently showing sample
       setProperty({
         name: '',
@@ -171,12 +171,12 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
         className="btn btn-primary w-full"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Analyzing with o1 (Advanced AI)...' : 'Analyze Property'}
+        {isSubmitting ? 'Analyzing...' : 'Analyze Property'}
       </button>
       
       {!isSubmitting && (
         <p className="mt-2 text-xs text-center text-gray-500">
-          Using OpenAI's most advanced model (o1) for optimal analysis
+          Using OpenAI's advanced model for optimal analysis
         </p>
       )}
     </form>
