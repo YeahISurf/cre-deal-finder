@@ -7,6 +7,7 @@ const FALLBACK_ANALYSIS = {
   property_characteristics_score: 7.5,
   total_score: 7.4,
   model_used: "Sample Analysis (Fallback)",
+  models_attempted: ["All models failed"],
   seller_motivation_analysis: {
     explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
     keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
@@ -22,7 +23,7 @@ const FALLBACK_ANALYSIS = {
   summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential through addressing deferred maintenance and raising below-market rents."
 };
 
-const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo") => {
+const analyzeProperty = async (apiKey, property) => {
   // Create OpenAI client with the provided API key
   const openai = new OpenAI({
     apiKey: apiKey,
@@ -79,16 +80,20 @@ const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo"
     REMEMBER: Respond with ONLY a JSON object, no other text or formatting.
   `;
 
-  // Define a list of models to try in order of preference
-  const models = [selectedModel];
-  if (selectedModel === "o1-mini" || selectedModel === "o1") {
-    // If selected model is o1-mini/o1, add fallback models
-    models.push("gpt-3.5-turbo");
-  }
+  // Define models in order of premium/quality
+  const models = [
+    "o1",          // Most premium/powerful
+    "o1-mini",    // Premium but lighter
+    "gpt-4o",     // Strong performance
+    "gpt-3.5-turbo" // Most reliable fallback
+  ];
+  
+  const modelsAttempted = [];
 
   for (const model of models) {
     try {
       console.log(`Attempting to call OpenAI API with model: ${model}...`);
+      modelsAttempted.push(model);
       
       const response = await openai.chat.completions.create({
         model: model,
@@ -117,7 +122,11 @@ const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo"
       
       try {
         const parsedContent = JSON.parse(content);
-        return { ...parsedContent, model_used: model };
+        return { 
+          ...parsedContent, 
+          model_used: model,
+          models_attempted: modelsAttempted
+        };
       } catch (parseError) {
         console.error('JSON parsing error:', parseError);
         continue; // Try next model
@@ -130,7 +139,11 @@ const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo"
   }
   
   // If all models failed, return fallback
-  return { ...FALLBACK_ANALYSIS, model_used: "Sample Analysis (All API calls failed)" };
+  return { 
+    ...FALLBACK_ANALYSIS, 
+    model_used: "Sample Analysis (All API calls failed)",
+    models_attempted: modelsAttempted
+  };
 };
 
 export default async function handler(req, res) {
@@ -138,7 +151,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { apiKey, property, model = "gpt-3.5-turbo" } = req.body;
+  const { apiKey, property } = req.body;
 
   if (!apiKey) {
     return res.status(400).json({ error: 'OpenAI API key is required' });
@@ -149,14 +162,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const analysis = await analyzeProperty(apiKey, property, model);
+    const analysis = await analyzeProperty(apiKey, property);
     res.status(200).json(analysis);
   } catch (error) {
     console.error('Error in handler:', error);
     // Return fallback analysis only when there's a genuine error
     res.status(200).json({ 
       ...FALLBACK_ANALYSIS, 
-      model_used: "Sample Analysis (Error handler)" 
+      model_used: "Sample Analysis (Error handler)",
+      models_attempted: ["Error occurred before model attempts"]
     });
   }
 }

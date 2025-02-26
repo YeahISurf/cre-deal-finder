@@ -65,7 +65,7 @@ export default function AnalysisResults({ results }) {
   
   if (!results) return null;
   
-  const { property, model_used, ...analysis } = results;
+  const { property, model_used, models_attempted, ...analysis } = results;
   
   return (
     <div>
@@ -80,7 +80,14 @@ export default function AnalysisResults({ results }) {
       
       {model_used && (
         <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm">
-          <span className="font-semibold">AI Model Used:</span> {model_used}
+          <p>
+            <span className="font-semibold">AI Model Used:</span> {model_used}
+          </p>
+          {models_attempted && models_attempted.length > 0 && (
+            <p className="mt-1">
+              <span className="font-semibold">Models Attempted:</span> {models_attempted.join(' → ')}
+            </p>
+          )}
         </div>
       )}
       

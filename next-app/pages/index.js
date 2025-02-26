@@ -11,6 +11,7 @@ const FALLBACK_ANALYSIS = {
   property_characteristics_score: 7.5,
   total_score: 7.4,
   model_used: "Sample Analysis",
+  models_attempted: ["No models attempted"],
   seller_motivation_analysis: {
     explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
     keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
@@ -33,7 +34,6 @@ export default function Home() {
   const [error, setError] = useState('');
   const [usedFallback, setUsedFallback] = useState(false);
   const [skipAPI, setSkipAPI] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey && !skipAPI) {
@@ -65,7 +65,7 @@ export default function Home() {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout (increased for model cascade)
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -75,8 +75,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           apiKey,
-          property: propertyData,
-          model: selectedModel
+          property: propertyData
         }),
       });
 
@@ -101,7 +100,8 @@ export default function Home() {
         setResults({
           ...FALLBACK_ANALYSIS,
           property: propertyData,
-          model_used: "Sample Analysis (Error Fallback)"
+          model_used: "Sample Analysis (Error Fallback)",
+          models_attempted: ["Error occurred during API call"]
         });
         setUsedFallback(true);
       }, 500);
@@ -162,32 +162,14 @@ export default function Home() {
                 disabled={skipAPI}
               />
               
-              {!skipAPI && (
-                <div className="mt-2">
-                  <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
-                    AI Model
-                  </label>
-                  <select
-                    id="model"
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    className="form-input"
-                    disabled={skipAPI}
-                  >
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Default)</option>
-                    <option value="o1-mini">O1-Mini (Experimental)</option>
-                    <option value="o1">O1 (Experimental)</option>
-                  </select>
-                </div>
-              )}
-              
               {skipAPI ? (
                 <p className="mt-1 text-xs text-gray-500">
                   Using sample analysis mode - no API key required.
                 </p>
               ) : (
                 <p className="mt-1 text-xs text-gray-500">
-                  Your API key is only used for this session and is not stored on our servers.
+                  Your API key is only used for this session and is not stored on our servers. 
+                  The system will automatically try multiple AI models in order of premium quality.
                 </p>
               )}
             </div>
@@ -207,7 +189,8 @@ export default function Home() {
             {isAnalyzing ? (
               <div className="flex flex-col items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 mb-4"></div>
-                <p className="text-gray-600">Analyzing property...</p>
+                <p className="text-gray-600">Analyzing property with multiple AI models...</p>
+                <p className="text-xs text-gray-500 mt-2">Trying premium models first (o1 → o1-mini → gpt-4o → gpt-3.5-turbo)</p>
               </div>
             ) : results ? (
               <>
