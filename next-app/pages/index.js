@@ -31,6 +31,7 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [usedFallback, setUsedFallback] = useState(false);
+  const [modelUsed, setModelUsed] = useState(null);
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey) {
@@ -46,6 +47,7 @@ export default function Home() {
     setError('');
     setIsAnalyzing(true);
     setUsedFallback(false);
+    setModelUsed(null);
 
     try {
       const response = await fetch('/api/analyze', {
@@ -65,6 +67,11 @@ export default function Home() {
       }
 
       const data = await response.json();
+      
+      // Extract model information if available
+      const usedModel = data.model || 'o1'; // Default to o1 if not specified
+      setModelUsed(usedModel);
+      
       setResults({
         ...data,
         property: propertyData
@@ -141,13 +148,18 @@ export default function Home() {
             {isAnalyzing ? (
               <div className="flex flex-col items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 mb-4"></div>
-                <p className="text-gray-600">Analyzing property with OpenAI...</p>
+                <p className="text-gray-600">Analyzing property with OpenAI's o1 model...</p>
+                <p className="text-sm text-gray-500 mt-2">This may take a moment as we use the most advanced model available</p>
               </div>
             ) : results ? (
               <>
-                {usedFallback && (
+                {usedFallback ? (
                   <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded-md">
                     Note: Using sample analysis due to API issues. For actual analysis, please check your API key or try again later.
+                  </div>
+                ) : modelUsed && (
+                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
+                    Analysis performed using OpenAI's {modelUsed} model
                   </div>
                 )}
                 <AnalysisResults results={results} />

@@ -94,8 +94,16 @@ const analyzeProperty = async (apiKey, property) => {
     Make sure your response is VALID JSON. No prefixes or additional text, just the JSON object.
   `;
 
-  // Define a list of models to try in order of preference
-  const models = ['gpt-3.5-turbo'];
+  // Define a list of models to try in order of preference (from most powerful to less powerful)
+  const models = [
+    'o1',              // Try the best model first (o1)
+    'gpt-4o',          // Second best option
+    'o1-mini',         // Smaller version of o1
+    'o3-mini',         // Alternative smaller version 
+    'gpt-4o-mini',     // Smaller version of gpt-4o
+    'gpt-3.5-turbo'    // Most reliable fallback
+  ];
+  
   let lastError = null;
 
   // Try each model in succession
@@ -115,13 +123,13 @@ const analyzeProperty = async (apiKey, property) => {
       });
       
       if (!response.choices || !response.choices[0] || !response.choices[0].message) {
-        throw new Error('Invalid response structure from OpenAI API');
+        throw new Error(`Invalid response structure from OpenAI API using model ${model}`);
       }
       
       const content = response.choices[0].message.content;
       
       // Log for debugging (truncate large content)
-      console.log('Response content preview:', 
+      console.log(`Response from ${model} (preview):`, 
           content.length > 150 ? 
           content.substring(0, 75) + '...' + content.substring(content.length - 75) : 
           content
@@ -131,7 +139,7 @@ const analyzeProperty = async (apiKey, property) => {
       try {
         // Make sure content is a string
         if (typeof content !== 'string') {
-          throw new Error(`Response content is not a string: ${typeof content}`);
+          throw new Error(`Response content from ${model} is not a string: ${typeof content}`);
         }
         
         // Trim any whitespace
@@ -139,22 +147,67 @@ const analyzeProperty = async (apiKey, property) => {
         
         // Try to parse JSON
         const result = JSON.parse(trimmedContent);
-        console.log('Successfully parsed JSON response');
+        console.log(`Successfully parsed JSON response from ${model}`);
+        
+        // Validate that the structure matches what we expect
+        if (!validateAnalysisStructure(result)) {
+          throw new Error(`Response from ${model} is missing required fields`);
+        }
+        
         return result;
       } catch (parseError) {
-        console.error('JSON parsing error:', parseError);
+        console.error(`JSON parsing error with ${model}:`, parseError);
         console.error('Content causing error:', content.substring(0, 200));
-        throw new Error(`Failed to parse JSON response: ${parseError.message}. Content starts with: ${content.substring(0, 100)}...`);
+        throw new Error(`Failed to parse JSON response from ${model}: ${parseError.message}. Content starts with: ${content.substring(0, 100)}...`);
       }
     } catch (error) {
       console.error(`Error with model ${model}:`, error);
       lastError = error;
+      // Continue to the next model in the list
     }
   }
   
   // If we get here, all models failed
   throw lastError || new Error('Failed to analyze property with all available models');
 };
+
+// Helper function to validate that the analysis result has the expected structure
+function validateAnalysisStructure(result) {
+  // Check for required fields
+  const requiredFields = [
+    'seller_motivation_score',
+    'transaction_complexity_score',
+    'property_characteristics_score',
+    'total_score',
+    'seller_motivation_analysis',
+    'transaction_complexity_analysis',
+    'property_characteristics_analysis',
+    'summary'
+  ];
+  
+  for (const field of requiredFields) {
+    if (!(field in result)) {
+      console.error(`Missing required field: ${field}`);
+      return false;
+    }
+  }
+  
+  // Check that nested objects have the expected structure
+  const analysisFields = [
+    'seller_motivation_analysis',
+    'transaction_complexity_analysis',
+    'property_characteristics_analysis'
+  ];
+  
+  for (const field of analysisFields) {
+    if (!result[field].explanation || !Array.isArray(result[field].keywords)) {
+      console.error(`Missing nested fields in ${field}`);
+      return false;
+    }
+  }
+  
+  return true;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
