@@ -258,5 +258,10 @@ export default async function handler(req, res) {
       error_message: globalError.message || "Unknown error",
       stack_trace: globalError.stack
     });
+  } finally {
+    // Ensure headers aren't sent twice
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+    }
   }
 }
