@@ -1,22 +1,14 @@
-# Scraping
-apify-client==1.0.0
-
-# Data processing
-pandas==2.0.0
-numpy==1.24.0
-
-# NLP
-openai==1.5.0
-spacy==3.7.0
-
-# Google Sheets Integration
-gspread==5.10.0
-oauth2client==4.1.3
-
-# AWS
-boto3==1.28.0
-
-# Utilities
-python-dotenv==1.0.0
+# For local testing (minimal requirements)
 pyyaml==6.0.0
-requests==2.31.0
+python-dotenv==1.0.0
+
+# The following packages will be needed for the full version
+# but are not required for basic local testing:
+# apify-client==1.0.0
+# pandas==2.0.0
+# numpy==1.24.0
+# openai==1.5.0
+# spacy==3.7.0
+# gspread==5.10.0
+# oauth2client==4.1.3
+# boto3==1.28.0
