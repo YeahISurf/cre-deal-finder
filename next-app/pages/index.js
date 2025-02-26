@@ -10,6 +10,7 @@ const FALLBACK_ANALYSIS = {
   transaction_complexity_score: 6.0,
   property_characteristics_score: 7.5,
   total_score: 7.4,
+  model_used: "Sample Analysis",
   seller_motivation_analysis: {
     explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
     keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
@@ -32,6 +33,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [usedFallback, setUsedFallback] = useState(false);
   const [skipAPI, setSkipAPI] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo');
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey && !skipAPI) {
@@ -73,7 +75,8 @@ export default function Home() {
         },
         body: JSON.stringify({
           apiKey,
-          property: propertyData
+          property: propertyData,
+          model: selectedModel
         }),
       });
 
@@ -97,7 +100,8 @@ export default function Home() {
       setTimeout(() => {
         setResults({
           ...FALLBACK_ANALYSIS,
-          property: propertyData
+          property: propertyData,
+          model_used: "Sample Analysis (Error Fallback)"
         });
         setUsedFallback(true);
       }, 500);
@@ -157,6 +161,25 @@ export default function Home() {
                 className="form-input"
                 disabled={skipAPI}
               />
+              
+              {!skipAPI && (
+                <div className="mt-2">
+                  <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
+                    AI Model
+                  </label>
+                  <select
+                    id="model"
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="form-input"
+                    disabled={skipAPI}
+                  >
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Default)</option>
+                    <option value="o1-mini">O1-Mini (Experimental)</option>
+                    <option value="o1">O1 (Experimental)</option>
+                  </select>
+                </div>
+              )}
               
               {skipAPI ? (
                 <p className="mt-1 text-xs text-gray-500">
