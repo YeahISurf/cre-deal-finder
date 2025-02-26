@@ -73,6 +73,8 @@ const analyzeProperty = async (apiKey, property) => {
     - Unusual property types with limited buyer pool
     
     Be thorough but concise in your analysis. Focus on objective signals in the listing description.
+    
+    IMPORTANT: Your response must be valid JSON. Do not include any text before or after the JSON structure.
   `;
 
   const userPrompt = `
@@ -88,6 +90,8 @@ const analyzeProperty = async (apiKey, property) => {
     
     Analyze this listing for signs of seller motivation, transaction complexity, and valuable property characteristics.
     Return your analysis in the requested JSON format with scores, explanations, and keywords for each category.
+    
+    Make sure your response is VALID JSON. No prefixes or additional text, just the JSON object.
   `;
 
   // Define a list of models to try in order of preference
@@ -105,8 +109,9 @@ const analyzeProperty = async (apiKey, property) => {
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.2,
-        response_format: { type: "json_object" },
+        temperature: 0.1, // Lower temperature for more predictable responses
+        response_format: { type: "json_object" }, // Ensure JSON response
+        max_tokens: 2000,
       });
       
       if (!response.choices || !response.choices[0] || !response.choices[0].message) {
@@ -114,17 +119,32 @@ const analyzeProperty = async (apiKey, property) => {
       }
       
       const content = response.choices[0].message.content;
-      console.log('Response content:', content.substring(0, 100) + '...');
+      
+      // Log for debugging (truncate large content)
+      console.log('Response content preview:', 
+          content.length > 150 ? 
+          content.substring(0, 75) + '...' + content.substring(content.length - 75) : 
+          content
+      );
       
       // Check if content is valid JSON before parsing
       try {
-        // Use a safe JSON parsing approach
-        const result = JSON.parse(content);
+        // Make sure content is a string
+        if (typeof content !== 'string') {
+          throw new Error(`Response content is not a string: ${typeof content}`);
+        }
+        
+        // Trim any whitespace
+        const trimmedContent = content.trim();
+        
+        // Try to parse JSON
+        const result = JSON.parse(trimmedContent);
         console.log('Successfully parsed JSON response');
         return result;
       } catch (parseError) {
         console.error('JSON parsing error:', parseError);
-        throw new Error(`Failed to parse JSON response: ${parseError.message}. Response starts with: ${content.substring(0, 100)}...`);
+        console.error('Content causing error:', content.substring(0, 200));
+        throw new Error(`Failed to parse JSON response: ${parseError.message}. Content starts with: ${content.substring(0, 100)}...`);
       }
     } catch (error) {
       console.error(`Error with model ${model}:`, error);
@@ -152,30 +172,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Generate a mock response for debugging if needed
-    /*
-    const mockResponse = {
-      seller_motivation_score: 8.5,
-      transaction_complexity_score: 6.0,
-      property_characteristics_score: 7.5,
-      total_score: 7.4,
-      seller_motivation_analysis: {
-        explanation: "The listing shows clear signs of a motivated seller with explicit statements.",
-        keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
-      },
-      transaction_complexity_analysis: {
-        explanation: "The transaction has moderate complexity with some potential complications.",
-        keywords: ["deferred maintenance", "below market"]
-      },
-      property_characteristics_analysis: {
-        explanation: "The property shows good value-add potential through renovation and repositioning.",
-        keywords: ["value-add", "below market rents", "deferred maintenance"]
-      },
-      summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential."
-    };
-    return res.status(200).json(mockResponse);
-    */
-
     const analysis = await analyzeProperty(apiKey, property);
     res.status(200).json(analysis);
   } catch (error) {
@@ -183,9 +179,15 @@ export default async function handler(req, res) {
     
     // Format the error message to be more helpful
     const errorMessage = error.message || 'Unknown error occurred';
-    const errorDetails = error.response ? 
-      `Status: ${error.response.status}, Data: ${JSON.stringify(error.response.data)}` : 
-      'No additional details available';
+    let errorDetails = 'No additional details available';
+    
+    if (error.response) {
+      try {
+        errorDetails = `Status: ${error.response.status}, Data: ${JSON.stringify(error.response.data)}`;
+      } catch (e) {
+        errorDetails = `Status: ${error.response.status}, Data could not be stringified`;
+      }
+    }
     
     res.status(500).json({ 
       error: 'Error analyzing property', 

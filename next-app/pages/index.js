@@ -4,11 +4,33 @@ import PropertyForm from '../components/PropertyForm';
 import AnalysisResults from '../components/AnalysisResults';
 import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
+// Fallback mock data in case the API fails completely
+const FALLBACK_ANALYSIS = {
+  seller_motivation_score: 8.5,
+  transaction_complexity_score: 6.0,
+  property_characteristics_score: 7.5,
+  total_score: 7.4,
+  seller_motivation_analysis: {
+    explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
+    keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
+  },
+  transaction_complexity_analysis: {
+    explanation: "The transaction has moderate complexity due to deferred maintenance issues that might require negotiations.",
+    keywords: ["deferred maintenance", "below market"]
+  },
+  property_characteristics_analysis: {
+    explanation: "The property shows good value-add potential through renovation and repositioning with below market rents.",
+    keywords: ["value-add", "below market rents", "deferred maintenance"]
+  },
+  summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential through addressing deferred maintenance and raising below-market rents."
+};
+
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+  const [usedFallback, setUsedFallback] = useState(false);
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey) {
@@ -23,6 +45,7 @@ export default function Home() {
 
     setError('');
     setIsAnalyzing(true);
+    setUsedFallback(false);
 
     try {
       const response = await fetch('/api/analyze', {
@@ -38,7 +61,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error + (errorData.details ? ': ' + errorData.details : ''));
+        throw new Error(errorData.error + (errorData.message ? ': ' + errorData.message : ''));
       }
 
       const data = await response.json();
@@ -47,7 +70,17 @@ export default function Home() {
         property: propertyData
       });
     } catch (err) {
-      setError(err.message);
+      console.error('Analysis error:', err);
+      setError(`${err.message}. Using sample analysis as fallback.`);
+      
+      // Use fallback data after 1 second delay to make it clear something went wrong
+      setTimeout(() => {
+        setResults({
+          ...FALLBACK_ANALYSIS,
+          property: propertyData
+        });
+        setUsedFallback(true);
+      }, 1000);
     } finally {
       setIsAnalyzing(false);
     }
@@ -111,7 +144,14 @@ export default function Home() {
                 <p className="text-gray-600">Analyzing property with OpenAI...</p>
               </div>
             ) : results ? (
-              <AnalysisResults results={results} />
+              <>
+                {usedFallback && (
+                  <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded-md">
+                    Note: Using sample analysis due to API issues. For actual analysis, please check your API key or try again later.
+                  </div>
+                )}
+                <AnalysisResults results={results} />
+              </>
             ) : (
               <div className="text-center text-gray-500 h-64 flex items-center justify-center">
                 <p>Enter property details and click &quot;Analyze Property&quot; to see results</p>
