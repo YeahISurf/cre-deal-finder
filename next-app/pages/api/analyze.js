@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 
 const analyzeProperty = async (apiKey, property) => {
+  // Create OpenAI client with the provided API key
   const openai = new OpenAI({
     apiKey: apiKey,
   });
@@ -89,26 +90,17 @@ const analyzeProperty = async (apiKey, property) => {
     Return your analysis in the requested JSON format with scores, explanations, and keywords for each category.
   `;
 
-  try {
-    // First try with o1 model
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Using a more widely available model
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    });
+  // Define a list of models to try in order of preference
+  const models = ['gpt-3.5-turbo'];
+  let lastError = null;
 
-    return JSON.parse(response.choices[0].message.content);
-  } catch (error) {
-    console.error("Error with primary model, falling back to alternative:", error);
-    
-    // Fallback to another model if o1 fails
+  // Try each model in succession
+  for (const model of models) {
     try {
-      const fallbackResponse = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo", // Fallback to a more widely supported model
+      console.log(`Trying to analyze property with model: ${model}`);
+      
+      const response = await openai.chat.completions.create({
+        model: model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -116,13 +108,32 @@ const analyzeProperty = async (apiKey, property) => {
         temperature: 0.2,
         response_format: { type: "json_object" },
       });
-
-      return JSON.parse(fallbackResponse.choices[0].message.content);
-    } catch (fallbackError) {
-      // Re-throw with more details
-      throw new Error(`Failed to analyze with all models. Details: ${fallbackError.message}`);
+      
+      if (!response.choices || !response.choices[0] || !response.choices[0].message) {
+        throw new Error('Invalid response structure from OpenAI API');
+      }
+      
+      const content = response.choices[0].message.content;
+      console.log('Response content:', content.substring(0, 100) + '...');
+      
+      // Check if content is valid JSON before parsing
+      try {
+        // Use a safe JSON parsing approach
+        const result = JSON.parse(content);
+        console.log('Successfully parsed JSON response');
+        return result;
+      } catch (parseError) {
+        console.error('JSON parsing error:', parseError);
+        throw new Error(`Failed to parse JSON response: ${parseError.message}. Response starts with: ${content.substring(0, 100)}...`);
+      }
+    } catch (error) {
+      console.error(`Error with model ${model}:`, error);
+      lastError = error;
     }
   }
+  
+  // If we get here, all models failed
+  throw lastError || new Error('Failed to analyze property with all available models');
 };
 
 export default async function handler(req, res) {
@@ -141,13 +152,45 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Generate a mock response for debugging if needed
+    /*
+    const mockResponse = {
+      seller_motivation_score: 8.5,
+      transaction_complexity_score: 6.0,
+      property_characteristics_score: 7.5,
+      total_score: 7.4,
+      seller_motivation_analysis: {
+        explanation: "The listing shows clear signs of a motivated seller with explicit statements.",
+        keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
+      },
+      transaction_complexity_analysis: {
+        explanation: "The transaction has moderate complexity with some potential complications.",
+        keywords: ["deferred maintenance", "below market"]
+      },
+      property_characteristics_analysis: {
+        explanation: "The property shows good value-add potential through renovation and repositioning.",
+        keywords: ["value-add", "below market rents", "deferred maintenance"]
+      },
+      summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential."
+    };
+    return res.status(200).json(mockResponse);
+    */
+
     const analysis = await analyzeProperty(apiKey, property);
     res.status(200).json(analysis);
   } catch (error) {
     console.error('Error analyzing property:', error);
+    
+    // Format the error message to be more helpful
+    const errorMessage = error.message || 'Unknown error occurred';
+    const errorDetails = error.response ? 
+      `Status: ${error.response.status}, Data: ${JSON.stringify(error.response.data)}` : 
+      'No additional details available';
+    
     res.status(500).json({ 
       error: 'Error analyzing property', 
-      details: error.message || 'Unknown error occurred'
+      message: errorMessage,
+      details: errorDetails
     });
   }
 }
