@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+@layer components {
+  .score-card {
+    @apply rounded-lg p-4 shadow-md text-center transition-all;
+  }
+  
+  .score-high {
+    @apply bg-green-50 border-l-4 border-green-500 text-green-800;
+  }
+  
+  .score-medium {
+    @apply bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800;
+  }
+  
+  .score-low {
+    @apply bg-red-50 border-l-4 border-red-500 text-red-800;
+  }
+  
+  .form-input {
+    @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+}
