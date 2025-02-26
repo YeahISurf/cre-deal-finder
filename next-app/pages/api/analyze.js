@@ -34,7 +34,7 @@ async function analyzeWithO1(apiKey, property) {
     });
     
     // For o1, we need to use 'max_completion_tokens' instead of 'max_tokens'
-    // as shown in the error logs
+    // and cannot use 'temperature' parameter
     const response = await openai.chat.completions.create({
       model: "o1",
       messages: [
@@ -42,10 +42,16 @@ async function analyzeWithO1(apiKey, property) {
           role: "user",
           content: `You are a commercial real estate investment analyst. Analyze this property listing and provide scores from 1-10 for seller motivation, transaction complexity, and property characteristics, plus a total weighted score and analysis.
 
-Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}\n\nProvide your response as a JSON object with scores, explanations, and identified keywords.`
+Property: ${property.name}
+Type: ${property.property_type}
+Location: ${property.location}
+Price: ${property.price}
+
+Description: ${property.description}
+
+Provide your response as a JSON object with scores, explanations, and identified keywords. Return valid JSON format.`
         }
       ],
-      temperature: 0.1,
       max_completion_tokens: 1500,  // Correct parameter for o1
       response_format: { type: "json_object" }
     });
@@ -73,8 +79,7 @@ async function analyzeWithO1Mini(apiKey, property) {
       apiKey: apiKey
     });
     
-    // For o1-mini, we can't use 'system' role and need to use max_completion_tokens
-    // as shown in the error logs
+    // For o1-mini, we can't use 'system' role and can't set temperature
     const response = await openai.chat.completions.create({
       model: "o1-mini",
       messages: [
@@ -83,10 +88,16 @@ async function analyzeWithO1Mini(apiKey, property) {
           role: "user",
           content: `You are a commercial real estate investment analyst. Analyze this property listing and provide scores from 1-10 for seller motivation, transaction complexity, and property characteristics, plus a total weighted score and analysis.
 
-Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}\n\nProvide your response as a JSON object with scores, explanations, and identified keywords.`
+Property: ${property.name}
+Type: ${property.property_type}
+Location: ${property.location}
+Price: ${property.price}
+
+Description: ${property.description}
+
+Provide your response as a JSON object with scores, explanations, and identified keywords. Return valid JSON format.`
         }
       ],
-      temperature: 0.1,
       max_completion_tokens: 1500,  // Correct parameter for o1-mini
       response_format: { type: "json_object" }
     });
@@ -120,11 +131,18 @@ async function analyzeWithGPT(apiKey, property) {
       messages: [
         {
           role: "system",
-          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics.`
+          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics. Your response must be in JSON format.`
         },
         {
           role: "user",
-          content: `Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}`
+          content: `Property: ${property.name}
+Type: ${property.property_type}
+Location: ${property.location}
+Price: ${property.price}
+
+Description: ${property.description}
+
+Analyze this listing and provide scores from 1-10 for each category. Return the results as JSON with scores, explanations, and keywords.`
         }
       ],
       temperature: 0.1,
