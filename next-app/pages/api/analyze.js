@@ -6,7 +6,7 @@ const FALLBACK_ANALYSIS = {
   transaction_complexity_score: 6.0,
   property_characteristics_score: 7.5,
   total_score: 7.4,
-  model_used: "Sample Analysis",
+  model_used: "Sample Analysis (Fallback)",
   seller_motivation_analysis: {
     explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
     keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
@@ -23,9 +23,6 @@ const FALLBACK_ANALYSIS = {
 };
 
 const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo") => {
-  // Skip API call and return fallback for testing if needed
-  // return { ...FALLBACK_ANALYSIS, model_used: "Sample Analysis (Forced)" };
-  
   // Create OpenAI client with the provided API key
   const openai = new OpenAI({
     apiKey: apiKey,
@@ -43,6 +40,27 @@ const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo"
     Also provide a brief explanation of why you assigned that score and list any keywords or phrases that support your analysis.
     
     Calculate a total score as a weighted average: 40% Seller Motivation + 30% Transaction Complexity + 30% Property Characteristics.
+
+    For your response, provide a VALID JSON object with the following structure and nothing else:
+    {
+      "seller_motivation_score": <number>,
+      "transaction_complexity_score": <number>,
+      "property_characteristics_score": <number>,
+      "total_score": <number>,
+      "seller_motivation_analysis": {
+        "explanation": "<text>",
+        "keywords": ["<keyword1>", "<keyword2>", ...]
+      },
+      "transaction_complexity_analysis": {
+        "explanation": "<text>",
+        "keywords": ["<keyword1>", "<keyword2>", ...]
+      },
+      "property_characteristics_analysis": {
+        "explanation": "<text>",
+        "keywords": ["<keyword1>", "<keyword2>", ...]
+      },
+      "summary": "<text>"
+    }
   `;
 
   const userPrompt = `
@@ -56,17 +74,9 @@ const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo"
     Listing Description:
     ${property.description}
     
-    Based on the listing, provide the following analysis in JSON format:
-    - seller_motivation_score: number from 1-10
-    - transaction_complexity_score: number from 1-10
-    - property_characteristics_score: number from 1-10
-    - total_score: weighted average (40/30/30)
-    - seller_motivation_analysis: object with explanation and keywords array
-    - transaction_complexity_analysis: object with explanation and keywords array
-    - property_characteristics_analysis: object with explanation and keywords array
-    - summary: brief investment recommendation
+    Based on the listing, provide scores, explanations, and identified keywords for seller motivation, transaction complexity, and property characteristics.
 
-    ONLY return the JSON object, nothing else.
+    REMEMBER: Respond with ONLY a JSON object, no other text or formatting.
   `;
 
   // Define a list of models to try in order of preference
@@ -88,31 +98,30 @@ const analyzeProperty = async (apiKey, property, selectedModel = "gpt-3.5-turbo"
         ],
         temperature: 0.1, // Lower temperature for more predictable responses
         max_tokens: 1500, // Ensure enough tokens for a complete response
+        response_format: { type: "json_object" }
       });
       
       console.log(`OpenAI API response received from model: ${model}`);
       
-      // Only use for testing actual API integration when ready
-      if (process.env.NODE_ENV === "future_development") {
-        if (!response.choices || !response.choices[0] || !response.choices[0].message) {
-          console.error('Invalid response structure');
-          continue; // Try next model
-        }
-        
-        const content = response.choices[0].message.content;
-        console.log('Response content:', content.substring(0, 100) + '...');
-        
-        try {
-          const parsedContent = JSON.parse(content);
-          return { ...parsedContent, model_used: model };
-        } catch (parseError) {
-          console.error('JSON parsing error:', parseError);
-          continue; // Try next model
-        }
+      if (!response.choices || !response.choices[0] || !response.choices[0].message) {
+        console.error('Invalid response structure');
+        continue; // Try next model
       }
       
-      // Return the fallback analysis but with the model name for now
-      return { ...FALLBACK_ANALYSIS, model_used: `Sample Analysis (${model} attempted)` };
+      const content = response.choices[0].message.content;
+      console.log('Response content preview:', 
+        content.length > 150 ? 
+        content.substring(0, 75) + '...' + content.substring(content.length - 75) : 
+        content
+      );
+      
+      try {
+        const parsedContent = JSON.parse(content);
+        return { ...parsedContent, model_used: model };
+      } catch (parseError) {
+        console.error('JSON parsing error:', parseError);
+        continue; // Try next model
+      }
       
     } catch (error) {
       console.error(`Error calling OpenAI API with model ${model}:`, error);
@@ -144,7 +153,7 @@ export default async function handler(req, res) {
     res.status(200).json(analysis);
   } catch (error) {
     console.error('Error in handler:', error);
-    // Always return the fallback analysis instead of an error
+    // Return fallback analysis only when there's a genuine error
     res.status(200).json({ 
       ...FALLBACK_ANALYSIS, 
       model_used: "Sample Analysis (Error handler)" 
