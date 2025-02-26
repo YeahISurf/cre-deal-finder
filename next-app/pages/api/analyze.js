@@ -1,28 +1,5 @@
 import OpenAI from 'openai';
 
-// Hard-coded fallback analysis in case API fails
-const FALLBACK_ANALYSIS = {
-  seller_motivation_score: 8.5,
-  transaction_complexity_score: 6.0,
-  property_characteristics_score: 7.5,
-  total_score: 7.4,
-  model_used: "Sample Analysis",
-  models_attempted: ["API call failed"],
-  seller_motivation_analysis: {
-    explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
-    keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
-  },
-  transaction_complexity_analysis: {
-    explanation: "The transaction has moderate complexity due to deferred maintenance issues that might require negotiations.",
-    keywords: ["deferred maintenance", "below market"]
-  },
-  property_characteristics_analysis: {
-    explanation: "The property shows good value-add potential through renovation and repositioning with below market rents.",
-    keywords: ["value-add", "below market rents", "deferred maintenance"]
-  },
-  summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential through addressing deferred maintenance and raising below-market rents."
-};
-
 // Function to analyze property with o1 model using appropriate parameters
 async function analyzeWithO1(apiKey, property) {
   console.log('Starting analysis with o1 model');
@@ -191,6 +168,7 @@ export default async function handler(req, res) {
       return res.status(200).json(o1Result);
     } catch (o1Error) {
       console.log("o1 model failed, falling back to o1-mini");
+      console.error("O1 Error details:", o1Error);
       
       // If o1 fails, try o1-mini
       try {
@@ -199,22 +177,30 @@ export default async function handler(req, res) {
         return res.status(200).json(o1MiniResult);
       } catch (o1MiniError) {
         console.log("o1-mini model failed, falling back to GPT-3.5-Turbo");
+        console.error("O1-mini Error details:", o1MiniError);
         
         // If o1-mini fails, use GPT-3.5-Turbo as reliable fallback
-        modelsAttempted.push("gpt-3.5-turbo");
-        const gptResult = await analyzeWithGPT(apiKey, property);
-        return res.status(200).json(gptResult);
+        try {
+          modelsAttempted.push("gpt-3.5-turbo");
+          const gptResult = await analyzeWithGPT(apiKey, property);
+          return res.status(200).json(gptResult);
+        } catch (gptError) {
+          console.error("GPT-3.5-Turbo Error details:", gptError);
+          throw new Error(`All models failed: O1 Error: ${o1Error.message}, O1-mini Error: ${o1MiniError.message}, GPT Error: ${gptError.message}`);
+        }
       }
     }
   } catch (error) {
     console.error('All models failed:', error);
     
-    // Return fallback analysis if all models fail
-    return res.status(200).json({
-      ...FALLBACK_ANALYSIS,
-      model_used: "Sample Analysis (All API calls failed)",
+    // Return error details instead of fallback analysis
+    return res.status(500).json({
+      error: true,
+      message: "API Error - Debug Information",
+      error_details: error.toString(),
+      error_message: error.message,
       models_attempted: modelsAttempted,
-      error_message: error.message || "Unknown error"
+      stack_trace: error.stack
     });
   }
 }
