@@ -19,13 +19,13 @@ class OpenAIAnalyzer:
     Class for analyzing commercial real estate listings using OpenAI
     """
     
-    def __init__(self, api_key=None, model="gpt-3.5-turbo"):
+    def __init__(self, api_key=None, model="o1"):
         """
         Initialize the OpenAI analyzer
         
         Args:
             api_key (str, optional): OpenAI API key. If not provided, will look for OPENAI_API_KEY environment variable
-            model (str, optional): OpenAI model to use. Defaults to 'gpt-3.5-turbo'
+            model (str, optional): OpenAI model to use. Defaults to 'o1'
         """
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         if not self.api_key:

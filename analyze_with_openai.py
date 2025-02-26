@@ -33,7 +33,7 @@ def create_default_config():
     """Create default configuration for testing"""
     config = {
         'openai': {
-            'model': 'gpt-3.5-turbo',  # Cheaper and faster than GPT-4
+            'model': 'o1',  # Using the most advanced model available with free credits
             'api_key': None,  # Will prompt for this
         },
         'scoring': {
@@ -55,7 +55,7 @@ def show_welcome():
     print("\nInstructions:")
     print("  1. You will need to provide an OpenAI API key")
     print("  2. Paste a LoopNet property description")
-    print("  3. The system will analyze and score the listing using OpenAI")
+    print("  3. The system will analyze and score the listing using OpenAI's o1 model")
     print("  4. Review the detailed scores and AI analysis")
     print("=" * 80 + "\n")
 
@@ -197,8 +197,8 @@ def main():
         api_key = get_openai_key(config)
         
         # Create the OpenAI analyzer
-        model = config['openai'].get('model', 'gpt-3.5-turbo')
-        print(f"\nUsing OpenAI model: {model}")
+        model = config['openai'].get('model', 'o1')
+        print(f"\nUsing OpenAI model: {model} (most advanced model available)")
         analyzer = OpenAIAnalyzer(api_key=api_key, model=model)
         
         # Ask if user wants to use sample or paste their own
@@ -215,7 +215,7 @@ def main():
             listing = get_listing_input()
         
         # Analyze the listing
-        print("\nAnalyzing listing with OpenAI...")
+        print("\nAnalyzing listing with OpenAI's o1 model...")
         results = analyzer.analyze_listing(listing)
         
         # Display the results

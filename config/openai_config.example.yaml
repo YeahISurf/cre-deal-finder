@@ -8,10 +8,12 @@ openai:
   api_key: null  # Replace with your OpenAI API key
   
   # Model to use - options include:
-  # - gpt-3.5-turbo: Good balance of performance and cost
-  # - gpt-4: More accurate but more expensive and slower
-  # - gpt-4-turbo: Enhanced performance with lower latency than gpt-4
-  model: "gpt-3.5-turbo"
+  # - o1: Most advanced model (RECOMMENDED FOR FREE CREDITS)
+  # - gpt-4o: Strong model with good balance
+  # - gpt-4o-mini: Smaller version, faster but less accurate
+  # - o1-mini: Smaller version of o1
+  # - o3-mini: Alternative smaller model
+  model: "o1"
   
   # Advanced settings
   temperature: 0.2  # Lower for more consistent responses

@@ -73,7 +73,7 @@ def create_default_config():
     """Create default configuration"""
     config = {
         'openai': {
-            'model': 'gpt-3.5-turbo',
+            'model': 'o1',  # Using the most advanced model available with free credits
             'api_key': None,
         },
         'scoring': {
@@ -241,15 +241,17 @@ def main():
     
     # OpenAI model selection
     model_options = [
-        "gpt-3.5-turbo",
-        "gpt-4",
-        "gpt-4-turbo"
+        "o1",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "o1-mini",
+        "o3-mini"
     ]
     selected_model = st.sidebar.selectbox(
         "OpenAI Model",
         options=model_options,
-        index=model_options.index(config['openai'].get('model', 'gpt-3.5-turbo')) if config['openai'].get('model') in model_options else 0,
-        help="Select the OpenAI model to use. GPT-3.5 Turbo is faster and cheaper, while GPT-4 is more accurate."
+        index=model_options.index(config['openai'].get('model', 'o1')) if config['openai'].get('model') in model_options else 0,
+        help="Select the OpenAI model to use. o1 is the most advanced model available with free credits."
     )
     
     # Source selection
@@ -305,7 +307,7 @@ def main():
         elif not listing or not listing.get('description'):
             st.error("Please provide a property listing to analyze.")
         else:
-            with st.spinner("Analyzing listing with OpenAI..."):
+            with st.spinner(f"Analyzing listing with OpenAI's {selected_model} model..."):
                 try:
                     # Set API key in environment variable for this session
                     os.environ["OPENAI_API_KEY"] = api_key
@@ -325,6 +327,14 @@ def main():
                     
                 except Exception as e:
                     st.error(f"Error during analysis: {str(e)}")
+    
+    # Add information about model
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### About the Model")
+    st.sidebar.markdown(
+        "This application uses OpenAI's o1 model by default, which is their most advanced model available. "
+        "You have free daily usage allowance for this model through your OpenAI account."
+    )
 
 if __name__ == "__main__":
     main()

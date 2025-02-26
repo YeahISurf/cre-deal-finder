@@ -90,7 +90,7 @@ const analyzeProperty = async (apiKey, property) => {
   `;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "o1", // Using the most advanced model available with free credits
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
