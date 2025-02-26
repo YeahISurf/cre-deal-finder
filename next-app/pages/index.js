@@ -177,7 +177,7 @@ export default function Home() {
               ) : (
                 <p className="mt-2 text-sm text-gray-500">
                   Your API key is only used for this session and is not stored on our servers. 
-                  The system will automatically try multiple AI models in order of premium quality.
+                  The system uses GPT-3.5 Turbo for reliable analysis.
                 </p>
               )}
             </div>
@@ -202,8 +202,8 @@ export default function Home() {
                     <BuildingOfficeIcon className="h-6 w-6 text-primary-600" />
                   </div>
                 </div>
-                <p className="text-gray-600 mt-6 font-medium">Analyzing property with multiple AI models...</p>
-                <p className="text-sm text-gray-500 mt-2">Trying premium models first (o1 → o1-mini → gpt-4o → gpt-3.5-turbo)</p>
+                <p className="text-gray-600 mt-6 font-medium">Analyzing property with OpenAI...</p>
+                <p className="text-sm text-gray-500 mt-2">Using GPT-3.5 Turbo for reliable analysis</p>
               </div>
             ) : results ? (
               <>

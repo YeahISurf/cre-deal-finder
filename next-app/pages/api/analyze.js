@@ -6,8 +6,8 @@ const FALLBACK_ANALYSIS = {
   transaction_complexity_score: 6.0,
   property_characteristics_score: 7.5,
   total_score: 7.4,
-  model_used: "Sample Analysis (Fallback)",
-  models_attempted: ["All models failed"],
+  model_used: "Sample Analysis",
+  models_attempted: ["API call failed"],
   seller_motivation_analysis: {
     explanation: "The listing shows clear signs of a motivated seller with explicit mentions of price reduction and needing to sell quickly.",
     keywords: ["motivated seller", "must sell", "price reduced", "relocating"]
@@ -23,136 +23,81 @@ const FALLBACK_ANALYSIS = {
   summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential through addressing deferred maintenance and raising below-market rents."
 };
 
-const analyzeProperty = async (apiKey, property) => {
-  // Create OpenAI client with the provided API key
-  const openai = new OpenAI({
-    apiKey: apiKey,
-  });
-
-  const systemPrompt = `
-    You are a commercial real estate investment analyst specializing in identifying value-add and opportunistic investments. 
-    Your task is to analyze property listing descriptions and identify signals related to three key investment criteria categories:
-    
-    1. Seller Motivation: Signs that the seller may be motivated to sell quickly or at favorable terms.
-    2. Transaction Complexity: Factors that might reduce buyer competition or create unique opportunities.
-    3. Property Characteristics: Features indicating value-add potential or situations where perceived risk exceeds actual risk.
-    
-    For each category, score the property on a scale of 1-10 based on the strength and number of signals present.
-    Also provide a brief explanation of why you assigned that score and list any keywords or phrases that support your analysis.
-    
-    Calculate a total score as a weighted average: 40% Seller Motivation + 30% Transaction Complexity + 30% Property Characteristics.
-
-    For your response, provide a VALID JSON object with the following structure and nothing else:
-    {
-      "seller_motivation_score": <number>,
-      "transaction_complexity_score": <number>,
-      "property_characteristics_score": <number>,
-      "total_score": <number>,
-      "seller_motivation_analysis": {
-        "explanation": "<text>",
-        "keywords": ["<keyword1>", "<keyword2>", ...]
-      },
-      "transaction_complexity_analysis": {
-        "explanation": "<text>",
-        "keywords": ["<keyword1>", "<keyword2>", ...]
-      },
-      "property_characteristics_analysis": {
-        "explanation": "<text>",
-        "keywords": ["<keyword1>", "<keyword2>", ...]
-      },
-      "summary": "<text>"
-    }
-  `;
-
-  const userPrompt = `
-    Please analyze this commercial real estate listing:
-    
-    Property Name: ${property.name}
-    Property Type: ${property.property_type}
-    Location: ${property.location}
-    Price: ${property.price}
-    
-    Listing Description:
-    ${property.description}
-    
-    Based on the listing, provide scores, explanations, and identified keywords for seller motivation, transaction complexity, and property characteristics.
-
-    REMEMBER: Respond with ONLY a JSON object, no other text or formatting.
-  `;
-
-  // Define models in order of premium/quality
-  const models = [
-    "o1",          // Most premium/powerful
-    "o1-mini",    // Premium but lighter
-    "gpt-4o",     // Strong performance
-    "gpt-3.5-turbo" // Most reliable fallback
-  ];
+// Function to analyze property description using the OpenAI API
+async function analyzeWithOpenAI(apiKey, property, model = "gpt-3.5-turbo") {
+  console.log(`Starting analysis with model: ${model}`);
   
-  const modelsAttempted = [];
-
-  for (const model of models) {
+  try {
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: apiKey
+    });
+    
+    // Prepare the prompt
+    const messages = [
+      {
+        role: "system",
+        content: `You are a commercial real estate investment analyst. Analyze the property listing and provide:
+        1. A score from 1-10 for seller motivation
+        2. A score from 1-10 for transaction complexity
+        3. A score from 1-10 for property characteristics
+        4. A total weighted score (40% seller motivation, 30% transaction complexity, 30% property characteristics)
+        5. Brief explanation and keywords for each category
+        6. A summary recommendation
+        
+        IMPORTANT: Your response must be ONLY a valid JSON object with no preamble or additional text.`
+      },
+      {
+        role: "user",
+        content: `Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}`
+      }
+    ];
+    
+    // Make the API call
+    console.log('Calling OpenAI API...');
+    const completion = await openai.chat.completions.create({
+      model: model,
+      messages: messages,
+      temperature: 0.1,
+      response_format: { type: "json_object" }
+    });
+    
+    // Process the response
+    console.log('Received response from OpenAI API');
+    const responseContent = completion.choices[0].message.content;
+    console.log('Response content (first 100 chars):', responseContent.substring(0, 100));
+    
     try {
-      console.log(`Attempting to call OpenAI API with model: ${model}...`);
-      modelsAttempted.push(model);
+      // Parse JSON response
+      const parsed = JSON.parse(responseContent);
       
-      const response = await openai.chat.completions.create({
-        model: model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 0.1, // Lower temperature for more predictable responses
-        max_tokens: 1500, // Ensure enough tokens for a complete response
-        response_format: { type: "json_object" }
-      });
-      
-      console.log(`OpenAI API response received from model: ${model}`);
-      
-      if (!response.choices || !response.choices[0] || !response.choices[0].message) {
-        console.error('Invalid response structure');
-        continue; // Try next model
-      }
-      
-      const content = response.choices[0].message.content;
-      console.log('Response content preview:', 
-        content.length > 150 ? 
-        content.substring(0, 75) + '...' + content.substring(content.length - 75) : 
-        content
-      );
-      
-      try {
-        const parsedContent = JSON.parse(content);
-        return { 
-          ...parsedContent, 
-          model_used: model,
-          models_attempted: modelsAttempted
-        };
-      } catch (parseError) {
-        console.error('JSON parsing error:', parseError);
-        continue; // Try next model
-      }
-      
-    } catch (error) {
-      console.error(`Error calling OpenAI API with model ${model}:`, error);
-      // Continue to the next model in the list
+      // Add metadata
+      return {
+        ...parsed,
+        model_used: model,
+        models_attempted: [model]
+      };
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      console.error('Response content causing error:', responseContent);
+      throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
     }
+  } catch (error) {
+    console.error(`Error with OpenAI API:`, error);
+    throw error;
   }
-  
-  // If all models failed, return fallback
-  return { 
-    ...FALLBACK_ANALYSIS, 
-    model_used: "Sample Analysis (All API calls failed)",
-    models_attempted: modelsAttempted
-  };
-};
+}
 
+// Main API handler
 export default async function handler(req, res) {
+  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { apiKey, property } = req.body;
 
+  // Validate request data
   if (!apiKey) {
     return res.status(400).json({ error: 'OpenAI API key is required' });
   }
@@ -160,17 +105,21 @@ export default async function handler(req, res) {
   if (!property || !property.description) {
     return res.status(400).json({ error: 'Property description is required' });
   }
-
+  
   try {
-    const analysis = await analyzeProperty(apiKey, property);
-    res.status(200).json(analysis);
+    // Use a more reliable model by default
+    const result = await analyzeWithOpenAI(apiKey, property, "gpt-3.5-turbo");
+    return res.status(200).json(result);
   } catch (error) {
-    console.error('Error in handler:', error);
-    // Return fallback analysis only when there's a genuine error
-    res.status(200).json({ 
-      ...FALLBACK_ANALYSIS, 
-      model_used: "Sample Analysis (Error handler)",
-      models_attempted: ["Error occurred before model attempts"]
+    console.error('Failed to analyze property:', error);
+    
+    // Instead of trying to handle errors or retry, just return the fallback
+    // This ensures the user always gets a response
+    return res.status(200).json({
+      ...FALLBACK_ANALYSIS,
+      model_used: "Sample Analysis (API Error)",
+      models_attempted: ["gpt-3.5-turbo"],
+      error_message: error.message || "Unknown error"
     });
   }
 }
