@@ -171,12 +171,12 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
         className="btn btn-primary w-full"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Analyzing with o1 (Advanced AI)...' : 'Analyze Property'}
+        {isSubmitting ? 'Analyzing...' : 'Analyze Property'}
       </button>
       
       {!isSubmitting && (
         <p className="mt-2 text-xs text-center text-gray-500">
-          Using OpenAI's o1 model with fallbacks for optimal analysis
+          Using OpenAI's advanced model for optimal analysis
         </p>
       )}
     </form>

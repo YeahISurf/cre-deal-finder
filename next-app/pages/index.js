@@ -31,11 +31,11 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
   const [usedFallback, setUsedFallback] = useState(false);
-  const [modelUsed, setModelUsed] = useState(null);
+  const [skipAPI, setSkipAPI] = useState(false);
 
   const handleAnalysis = async (propertyData) => {
-    if (!apiKey) {
-      setError('Please enter your OpenAI API key');
+    if (!apiKey && !skipAPI) {
+      setError('Please enter your OpenAI API key or use Sample Analysis mode');
       return;
     }
 
@@ -47,11 +47,27 @@ export default function Home() {
     setError('');
     setIsAnalyzing(true);
     setUsedFallback(false);
-    setModelUsed(null);
+
+    // If skipAPI is true, use the fallback analysis directly
+    if (skipAPI) {
+      setTimeout(() => {
+        setResults({
+          ...FALLBACK_ANALYSIS,
+          property: propertyData
+        });
+        setUsedFallback(true);
+        setIsAnalyzing(false);
+      }, 1000); // Small delay to simulate processing
+      return;
+    }
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -61,33 +77,30 @@ export default function Home() {
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error + (errorData.message ? ': ' + errorData.message : ''));
       }
 
       const data = await response.json();
-      
-      // Extract model information if available
-      const usedModel = data.model || 'o1'; // Default to o1 if not specified
-      setModelUsed(usedModel);
-      
       setResults({
         ...data,
         property: propertyData
       });
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(`${err.message}. Using sample analysis as fallback.`);
+      setError(`${err.message || 'An error occurred'}. Using sample analysis as fallback.`);
       
-      // Use fallback data after 1 second delay to make it clear something went wrong
+      // Use fallback data after a short delay to make it clear something went wrong
       setTimeout(() => {
         setResults({
           ...FALLBACK_ANALYSIS,
           property: propertyData
         });
         setUsedFallback(true);
-      }, 1000);
+      }, 500);
     } finally {
       setIsAnalyzing(false);
     }
@@ -117,9 +130,24 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-4">Property Analysis</h2>
             
             <div className="mb-4">
-              <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-1">
-                OpenAI API Key
-              </label>
+              <div className="flex justify-between items-center">
+                <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-1">
+                  OpenAI API Key
+                </label>
+                <div className="flex items-center">
+                  <label htmlFor="skipAPI" className="block text-sm font-medium text-gray-700 mr-2">
+                    Use Sample Analysis
+                  </label>
+                  <input
+                    type="checkbox"
+                    id="skipAPI"
+                    checked={skipAPI}
+                    onChange={(e) => setSkipAPI(e.target.checked)}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                </div>
+              </div>
+              
               <input
                 type="password"
                 id="apiKey"
@@ -127,10 +155,18 @@ export default function Home() {
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="sk-..."
                 className="form-input"
+                disabled={skipAPI}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Your API key is only used for this session and is not stored on our servers.
-              </p>
+              
+              {skipAPI ? (
+                <p className="mt-1 text-xs text-gray-500">
+                  Using sample analysis mode - no API key required.
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">
+                  Your API key is only used for this session and is not stored on our servers.
+                </p>
+              )}
             </div>
 
             <PropertyForm onSubmit={handleAnalysis} isSubmitting={isAnalyzing} />
@@ -148,18 +184,15 @@ export default function Home() {
             {isAnalyzing ? (
               <div className="flex flex-col items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 mb-4"></div>
-                <p className="text-gray-600">Analyzing property with OpenAI's o1 model...</p>
-                <p className="text-sm text-gray-500 mt-2">This may take a moment as we use the most advanced model available</p>
+                <p className="text-gray-600">Analyzing property...</p>
               </div>
             ) : results ? (
               <>
-                {usedFallback ? (
+                {(usedFallback || skipAPI) && (
                   <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded-md">
-                    Note: Using sample analysis due to API issues. For actual analysis, please check your API key or try again later.
-                  </div>
-                ) : modelUsed && (
-                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
-                    Analysis performed using OpenAI's {modelUsed} model
+                    {skipAPI ? 
+                      "Using sample analysis mode. For AI-powered analysis, uncheck 'Use Sample Analysis' and enter your OpenAI API key." :
+                      "Using sample analysis due to API issues. For actual analysis, please check your API key or try again later."}
                   </div>
                 )}
                 <AnalysisResults results={results} />
