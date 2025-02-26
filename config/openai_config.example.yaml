@@ -1,0 +1,28 @@
+# OpenAI configuration for CRE Deal Finder
+
+# OpenAI API settings
+openai:
+  # API key - you need to provide this
+  # Either set it here, set the OPENAI_API_KEY environment variable, 
+  # or enter it when prompted
+  api_key: null  # Replace with your OpenAI API key
+  
+  # Model to use - options include:
+  # - gpt-3.5-turbo: Good balance of performance and cost
+  # - gpt-4: More accurate but more expensive and slower
+  # - gpt-4-turbo: Enhanced performance with lower latency than gpt-4
+  model: "gpt-3.5-turbo"
+  
+  # Advanced settings
+  temperature: 0.2  # Lower for more consistent responses
+  max_tokens: 2000  # Response length limit
+
+# Scoring configuration
+scoring:
+  # Weights for the final score calculation
+  seller_motivation_weight: 0.4
+  transaction_complexity_weight: 0.3
+  property_characteristics_weight: 0.3
+  
+  # Threshold for highlighting high-potential opportunities
+  highlight_threshold: 7  # Properties scoring above this will be highlighted
