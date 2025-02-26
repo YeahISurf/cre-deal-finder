@@ -111,44 +111,52 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/50">
       <Head>
         <title>PFISH LOBSTER COIN CRE Deal Finder</title>
         <meta name="description" content="AI-powered commercial real estate deal finder" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center mb-6">
-          <BuildingOfficeIcon className="h-8 w-8 text-primary-600 mr-2" />
-          <h1 className="text-3xl font-bold text-gray-900">PFISH LOBSTER COIN CRE Deal Finder</h1>
+      <main className="container mx-auto px-4 py-12">
+        <div className="flex items-center justify-center mb-8">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-500 p-3 rounded-2xl shadow-md mr-3">
+            <BuildingOfficeIcon className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-semibold text-gray-900">PFISH LOBSTER COIN CRE</h1>
         </div>
         
-        <p className="text-center text-gray-600 mb-8">
-          AI-powered analysis of commercial real estate listings to identify investment opportunities
+        <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto text-lg">
+          Premium AI-powered analysis of commercial real estate listings to identify investment opportunities
           based on seller motivation, transaction complexity, and property characteristics.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Property Analysis</h2>
+        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="card">
+            <h2 className="text-2xl font-medium mb-6 text-gray-900">Property Analysis</h2>
             
-            <div className="mb-4">
+            <div className="mb-6">
               <div className="flex justify-between items-center">
-                <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-2">
                   OpenAI API Key
                 </label>
                 <div className="flex items-center">
                   <label htmlFor="skipAPI" className="block text-sm font-medium text-gray-700 mr-2">
                     Use Sample Analysis
                   </label>
-                  <input
-                    type="checkbox"
-                    id="skipAPI"
-                    checked={skipAPI}
-                    onChange={(e) => setSkipAPI(e.target.checked)}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
+                  <div className="relative inline-block h-6 w-12 cursor-pointer rounded-full bg-gray-200 transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2">
+                    <input 
+                      type="checkbox" 
+                      id="skipAPI" 
+                      className="sr-only" 
+                      checked={skipAPI} 
+                      onChange={(e) => setSkipAPI(e.target.checked)} 
+                    />
+                    <span 
+                      aria-hidden="true" 
+                      className={`${skipAPI ? 'translate-x-6 bg-primary-500' : 'translate-x-0 bg-white'} pointer-events-none inline-block h-6 w-6 transform rounded-full shadow ring-0 transition ease-in-out duration-200 border`} 
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -163,11 +171,11 @@ export default function Home() {
               />
               
               {skipAPI ? (
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-2 text-sm text-gray-500">
                   Using sample analysis mode - no API key required.
                 </p>
               ) : (
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-2 text-sm text-gray-500">
                   Your API key is only used for this session and is not stored on our servers. 
                   The system will automatically try multiple AI models in order of premium quality.
                 </p>
@@ -177,45 +185,51 @@ export default function Home() {
             <PropertyForm onSubmit={handleAnalysis} isSubmitting={isAnalyzing} />
 
             {error && (
-              <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+              <div className="mt-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl">
                 {error}
               </div>
             )}
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md overflow-auto">
-            <h2 className="text-xl font-semibold mb-4">Analysis Results</h2>
+          <div className="card overflow-auto subtle-scroll max-h-[800px]">
+            <h2 className="text-2xl font-medium mb-6 text-gray-900 sticky top-0 bg-white pt-1 pb-4 z-10">Analysis Results</h2>
             
             {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 mb-4"></div>
-                <p className="text-gray-600">Analyzing property with multiple AI models...</p>
-                <p className="text-xs text-gray-500 mt-2">Trying premium models first (o1 → o1-mini → gpt-4o → gpt-3.5-turbo)</p>
+              <div className="flex flex-col items-center justify-center h-[500px]">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <BuildingOfficeIcon className="h-6 w-6 text-primary-600" />
+                  </div>
+                </div>
+                <p className="text-gray-600 mt-6 font-medium">Analyzing property with multiple AI models...</p>
+                <p className="text-sm text-gray-500 mt-2">Trying premium models first (o1 → o1-mini → gpt-4o → gpt-3.5-turbo)</p>
               </div>
             ) : results ? (
               <>
                 {(usedFallback || skipAPI) && (
-                  <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded-md">
+                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 rounded-xl">
                     {skipAPI ? 
-                      "Using sample analysis mode. For AI-powered analysis, uncheck 'Use Sample Analysis' and enter your OpenAI API key." :
+                      "Using sample analysis mode. For AI-powered analysis, toggle off 'Use Sample Analysis' and enter your OpenAI API key." :
                       "Using sample analysis due to API issues. For actual analysis, please check your API key or try again later."}
                   </div>
                 )}
                 <AnalysisResults results={results} />
               </>
             ) : (
-              <div className="text-center text-gray-500 h-64 flex items-center justify-center">
-                <p>Enter property details and click &quot;Analyze Property&quot; to see results</p>
+              <div className="flex flex-col items-center justify-center h-[500px] text-gray-400">
+                <BuildingOfficeIcon className="h-12 w-12 mb-4 text-gray-300" />
+                <p>Enter property details and click "Analyze Property" to see results</p>
               </div>
             )}
           </div>
         </div>
       </main>
 
-      <footer className="bg-white border-t mt-12 py-6">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>PFISH LOBSTER COIN CRE Deal Finder &copy; {new Date().getFullYear()}</p>
-          <p className="mt-2">Powered by OpenAI and Next.js</p>
+      <footer className="mt-16 py-8 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-500">PFISH LOBSTER COIN CRE Deal Finder &copy; {new Date().getFullYear()}</p>
+          <p className="mt-2 text-sm text-gray-400">Powered by OpenAI and Next.js</p>
         </div>
       </footer>
     </div>

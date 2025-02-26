@@ -4,44 +4,75 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --background-rgb: 250, 250, 253;
+  --brand-gradient: linear-gradient(135deg, #4f46e5 0%, #9f7aea 100%);
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 @layer components {
   .score-card {
-    @apply rounded-lg p-4 shadow-md text-center transition-all;
+    @apply rounded-2xl p-5 shadow-sm text-center transition-all backdrop-blur-sm border;
   }
   
   .score-high {
-    @apply bg-green-50 border-l-4 border-green-500 text-green-800;
+    @apply bg-green-50/80 border-green-200 text-green-800;
   }
   
   .score-medium {
-    @apply bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800;
+    @apply bg-yellow-50/80 border-yellow-200 text-yellow-800;
   }
   
   .score-low {
-    @apply bg-red-50 border-l-4 border-red-500 text-red-800;
+    @apply bg-red-50/80 border-red-200 text-red-800;
   }
   
   .form-input {
-    @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500;
+    @apply w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all;
   }
   
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors;
+    @apply px-5 py-3 rounded-xl font-medium transition-all shadow-sm;
   }
   
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700;
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 text-white hover:shadow-md hover:from-primary-500 hover:to-primary-400 active:from-primary-700 active:to-primary-600;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+    @apply bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md;
+  }
+
+  .subtle-scroll {
+    @apply scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent scrollbar-thumb-rounded-full;
+  }
+  
+  .backdrop-card {
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100;
+  }
+}
+
+/* Custom scrollbar */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+  }
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thumb-rounded-full::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
   }
 }

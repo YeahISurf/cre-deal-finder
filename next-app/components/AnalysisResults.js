@@ -11,9 +11,9 @@ function ScoreCard({ title, score, className }) {
   
   return (
     <div className={`score-card ${scoreClass} ${className}`}>
-      <h3 className="text-lg font-semibold mb-1">{title}</h3>
-      <p className="text-3xl font-bold">{score.toFixed(1)}</p>
-      <p className="text-sm mt-1">out of 10</p>
+      <h3 className="text-lg font-medium mb-1">{title}</h3>
+      <p className="text-4xl font-semibold">{score.toFixed(1)}</p>
+      <p className="text-xs mt-1 text-gray-500 font-medium">out of 10</p>
     </div>
   );
 }
@@ -22,12 +22,12 @@ function ExpandableSection({ title, content, keywords = [] }) {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
-    <div className="border rounded-md mb-4 overflow-hidden">
+    <div className="border border-gray-200 rounded-xl mb-4 overflow-hidden bg-white shadow-sm">
       <button
-        className="w-full p-3 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h3 className="text-lg font-medium">{title}</h3>
+        <h3 className="text-lg font-medium text-gray-800">{title}</h3>
         {isExpanded ? (
           <ChevronUpIcon className="h-5 w-5 text-gray-500" />
         ) : (
@@ -36,17 +36,17 @@ function ExpandableSection({ title, content, keywords = [] }) {
       </button>
       
       {isExpanded && (
-        <div className="p-4">
-          <p className="text-gray-700 mb-3">{content}</p>
+        <div className="p-5">
+          <p className="text-gray-700 mb-4 leading-relaxed">{content}</p>
           
           {keywords.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Keywords Detected:</h4>
+              <h4 className="font-medium text-gray-800 mb-2">Keywords Detected:</h4>
               <div className="flex flex-wrap gap-2">
                 {keywords.map((keyword, index) => (
                   <span 
                     key={index} 
-                    className="px-2 py-1 bg-primary-100 text-primary-800 text-sm rounded-full"
+                    className="px-3 py-1 bg-primary-50 text-primary-600 text-sm rounded-full"
                   >
                     {keyword}
                   </span>
@@ -70,16 +70,16 @@ export default function AnalysisResults({ results }) {
   return (
     <div>
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">{property.name}</h3>
-        <div className="grid grid-cols-3 gap-2 text-sm text-gray-600">
-          <div><span className="font-medium">Type:</span> {property.property_type}</div>
-          <div><span className="font-medium">Location:</span> {property.location}</div>
-          <div><span className="font-medium">Price:</span> {property.price}</div>
+        <h3 className="text-xl font-medium mb-3 text-gray-900">{property.name}</h3>
+        <div className="grid grid-cols-3 gap-3 text-sm">
+          <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Type:</span> <span className="text-gray-600">{property.property_type}</span></div>
+          <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Location:</span> <span className="text-gray-600">{property.location}</span></div>
+          <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Price:</span> <span className="text-gray-600">{property.price}</span></div>
         </div>
       </div>
       
       {model_used && (
-        <div className="mb-4 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm">
+        <div className="mb-6 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-sm">
           <p>
             <span className="font-semibold">AI Model Used:</span> {model_used}
           </p>
@@ -91,9 +91,9 @@ export default function AnalysisResults({ results }) {
         </div>
       )}
       
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Scores</h3>
-        <div className="grid grid-cols-4 gap-3">
+      <div className="mb-8">
+        <h3 className="text-xl font-medium mb-4 text-gray-900">Scores</h3>
+        <div className="grid grid-cols-4 gap-4">
           <ScoreCard 
             title="Seller Motivation" 
             score={analysis.seller_motivation_score} 
@@ -109,13 +109,13 @@ export default function AnalysisResults({ results }) {
           <ScoreCard 
             title="TOTAL SCORE" 
             score={analysis.total_score} 
-            className="border-2 border-primary-200" 
+            className="shadow border-2 border-primary-100" 
           />
         </div>
       </div>
       
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Detailed Analysis</h3>
+      <div className="mb-8">
+        <h3 className="text-xl font-medium mb-4 text-gray-900">Detailed Analysis</h3>
         
         <ExpandableSection 
           title="Seller Motivation" 
@@ -136,30 +136,35 @@ export default function AnalysisResults({ results }) {
         />
       </div>
       
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Investment Recommendation</h3>
-        <div className="p-4 bg-primary-50 border border-primary-200 rounded-md">
-          <p className="text-gray-800">{analysis.summary}</p>
+      <div className="mb-8">
+        <h3 className="text-xl font-medium mb-4 text-gray-900">Investment Recommendation</h3>
+        <div className="p-5 bg-primary-50 border border-primary-100 rounded-xl">
+          <p className="text-gray-800 leading-relaxed">{analysis.summary}</p>
         </div>
       </div>
       
-      <div>
+      <div className="flex justify-center">
         <button
           type="button"
-          className="btn btn-secondary text-sm"
+          className="btn btn-secondary text-sm flex items-center"
           onClick={() => setShowRawJson(!showRawJson)}
         >
           {showRawJson ? 'Hide' : 'Show'} Raw JSON
+          {showRawJson ? (
+            <ChevronUpIcon className="h-4 w-4 ml-1" />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4 ml-1" />
+          )}
         </button>
-        
-        {showRawJson && (
-          <div className="mt-3 border rounded-md overflow-hidden">
-            <SyntaxHighlighter language="json" style={docco} customStyle={{ margin: 0 }}>
-              {JSON.stringify(analysis, null, 2)}
-            </SyntaxHighlighter>
-          </div>
-        )}
       </div>
+      
+      {showRawJson && (
+        <div className="mt-4 border rounded-xl overflow-hidden">
+          <SyntaxHighlighter language="json" style={docco} customStyle={{ margin: 0, borderRadius: '0.75rem' }}>
+            {JSON.stringify(analysis, null, 2)}
+          </SyntaxHighlighter>
+        </div>
+      )}
     </div>
   );
 }

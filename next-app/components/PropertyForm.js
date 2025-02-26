@@ -70,18 +70,18 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-4">
-        <div className="flex border rounded-md overflow-hidden">
+      <div className="mb-6">
+        <div className="flex border rounded-xl overflow-hidden shadow-sm">
           <button
             type="button"
-            className={`flex-1 py-2 ${formType === 'manual' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}
+            className={`flex-1 py-3 transition-colors ${formType === 'manual' ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-sm' : 'bg-gray-50 hover:bg-gray-100'}`}
             onClick={() => setFormType('manual')}
           >
             Enter Manually
           </button>
           <button
             type="button"
-            className={`flex-1 py-2 ${formType === 'sample' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}
+            className={`flex-1 py-3 transition-colors ${formType === 'sample' ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-sm' : 'bg-gray-50 hover:bg-gray-100'}`}
             onClick={() => setFormType('sample')}
           >
             Use Sample
@@ -89,9 +89,9 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
             Property Name
           </label>
           <input
@@ -105,7 +105,7 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
           />
         </div>
         <div>
-          <label htmlFor="property_type" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="property_type" className="block text-sm font-medium text-gray-700 mb-2">
             Property Type
           </label>
           <input
@@ -120,9 +120,9 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
             Location
           </label>
           <input
@@ -136,7 +136,7 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
           />
         </div>
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
             Price
           </label>
           <input
@@ -151,8 +151,8 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
         </div>
       </div>
 
-      <div className="mb-4">
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="mb-6">
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
           Property Description
         </label>
         <textarea
@@ -162,7 +162,7 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
           onChange={handleInputChange}
           rows={10}
           placeholder="Paste the full property listing description here..."
-          className="form-input"
+          className="form-input font-light"
         ></textarea>
       </div>
 
@@ -171,12 +171,20 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
         className="btn btn-primary w-full"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Analyzing...' : 'Analyze Property'}
+        {isSubmitting ? (
+          <div className="flex items-center justify-center">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Analyzing...
+          </div>
+        ) : 'Analyze Property'}
       </button>
       
       {!isSubmitting && (
-        <p className="mt-2 text-xs text-center text-gray-500">
-          Using OpenAI's advanced model for optimal analysis
+        <p className="mt-3 text-sm text-center text-gray-500">
+          Analysis runs the property through multiple AI models for optimal results
         </p>
       )}
     </form>
