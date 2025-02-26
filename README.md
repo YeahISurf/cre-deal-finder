@@ -2,79 +2,55 @@
 
 This tool analyzes commercial real estate listings using OpenAI to identify potential investment opportunities based on seller motivation, transaction complexity, and property characteristics.
 
-## Quick Start with Web UI
+## Next.js Version (Recommended for Vercel)
 
-To use the user-friendly web interface:
+![Next.js Version](https://i.imgur.com/placeholder-ui-screenshot.png)
 
-1. Clone this repository:
+A modern React-based version optimized for Vercel deployment is available in the `next-app` directory:
+
+1. Navigate to the Next.js app:
 ```bash
-git clone https://github.com/YeahISurf/cre-deal-finder.git
-cd cre-deal-finder
+cd next-app
 ```
 
-2. Create a virtual environment and install dependencies:
+2. Install dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+npm install
+```
+
+3. Run the development server:
+```bash
+npm run dev
+```
+
+4. Open [http://localhost:3000](http://localhost:3000) to see the application
+
+### Deploying to Vercel
+
+1. Push your code to GitHub
+2. Import the project in Vercel
+3. Deploy with a single click
+
+See the [Next.js README](./next-app/README.md) for more details.
+
+## Python Version
+
+The original Python implementation is also available with two interfaces:
+
+### Web UI (Streamlit)
+
+```bash
 pip install -r requirements.txt
-```
-
-3. Launch the web application:
-```bash
 streamlit run app.py
 ```
 
-4. Open your browser to the displayed URL (typically http://localhost:8501)
-
-5. Enter your OpenAI API key in the sidebar and analyze properties!
-
-## UI Features
-
-![CRE Deal Finder UI](https://i.imgur.com/placeholder-ui-screenshot.png)
-
-The web interface provides:
-
-- **Intuitive Input**: Enter property details or paste listing descriptions
-- **Sample Data**: Use the included sample listing to test the system
-- **File Upload**: Analyze listings from text files
-- **Visual Scoring**: Color-coded scores and expandable analysis sections
-- **Model Selection**: Choose between different OpenAI models
-- **Results Export**: Automatic saving of analysis results
-
-## Command Line Options
-
-If you prefer to use the command line instead of the UI:
+### Command Line
 
 ```bash
 python analyze_with_openai.py
 ```
 
-## OpenAI Integration
-
-The tool uses OpenAI's language models to perform a sophisticated analysis of property listings:
-
-### Available Models
-
-- **GPT-3.5 Turbo** (default): Good balance of performance and cost
-- **GPT-4**: More accurate but more expensive and slower
-
-### Configuration
-
-You can configure the OpenAI integration by creating a `config/openai_config.yaml` file based on the example:
-
-```bash
-cp config/openai_config.example.yaml config/openai_config.yaml
-```
-
-Then edit the configuration file to set your API key and preferred model:
-
-```yaml
-openai:
-  api_key: "your-api-key-here"  # Your OpenAI API key
-  model: "gpt-3.5-turbo"        # Model to use
-```
-
-## How the Analyzer Works
+## How It Works
 
 The OpenAI-based analyzer evaluates commercial real estate listings based on three main criteria:
 
@@ -123,39 +99,20 @@ The tool evaluates listings based on three main categories:
 - Below Replacement Cost
 - Unique/Niche Property Types
 
-## Alternative: Basic Keyword Analysis
-
-If you prefer not to use OpenAI, the repository also includes a basic keyword-matching analyzer:
-
-```bash
-python test_listing_analyzer.py
-```
-
-Or to analyze the included sample listing:
-
-```bash
-python analyze_sample.py
-```
-
 ## Project Structure
 
 ```
 cre-deal-finder/
-├── app.py                     # Streamlit web application
-├── main.py                    # Main script for full automation (future)
+├── next-app/                   # Next.js version (Vercel optimized)
+├── app.py                      # Streamlit web application
 ├── analyze_with_openai.py      # OpenAI-based analyzer script
-├── test_listing_analyzer.py   # Basic keyword-based analyzer script
-├── analyze_sample.py          # Sample analysis script
+├── test_listing_analyzer.py    # Basic keyword-based analyzer script
 ├── analyzer/
 │   ├── openai_analyzer.py      # OpenAI integration for analysis
-│   ├── simple_nlp.py          # Basic keyword analysis
-│   └── scoring.py             # Scoring algorithms
+│   └── simple_nlp.py           # Basic keyword analysis
 ├── config/
-│   ├── openai_config.example.yaml # Example OpenAI configuration
-│   └── simple_config.yaml     # Configuration for keyword analysis
-├── sample_listings/           # Sample LoopNet listings
-│   └── motivated_seller.txt   # Example listing with investment signals
-└── requirements.txt           # Project dependencies
+│   └── openai_config.example.yaml # Example OpenAI configuration
+└── sample_listings/            # Sample LoopNet listings
 ```
 
 ## Future Enhancements
