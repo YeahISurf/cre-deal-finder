@@ -34,6 +34,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [usedFallback, setUsedFallback] = useState(false);
   const [skipAPI, setSkipAPI] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey && !skipAPI) {
@@ -49,6 +50,7 @@ export default function Home() {
     setError('');
     setIsAnalyzing(true);
     setUsedFallback(false);
+    setDebugInfo(null);
 
     // If skipAPI is true, use the fallback analysis directly
     if (skipAPI) {
@@ -64,6 +66,9 @@ export default function Home() {
     }
 
     try {
+      const start = Date.now();
+      console.log('Starting API request at:', new Date().toISOString());
+      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout (increased for model cascade)
 
@@ -80,31 +85,51 @@ export default function Home() {
       });
 
       clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error + (errorData.message ? ': ' + errorData.message : ''));
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      // Get raw text response first
+      const text = await response.text();
+      console.log('Raw response body (first 500 chars):', text.substring(0, 500));
+      
+      let data;
+      try {
+        // Try to parse as JSON
+        data = JSON.parse(text);
+        console.log('Parsed JSON data successfully');
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Non-JSON response received');
+        throw new Error(`Server returned invalid JSON: ${text.substring(0, 100)}...`);
+      }
+      
+      // Check if it's an error response
+      if (data.error === true) {
+        console.error('API returned error object:', data);
+        setDebugInfo(data);
+        throw new Error(`API Error: ${data.error_message || 'Unknown error'}`);
       }
 
-      const data = await response.json();
+      // If we got this far, we have valid JSON data
+      console.log(`Request completed in ${Date.now() - start}ms`);
       setResults({
         ...data,
         property: propertyData
       });
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(`${err.message || 'An error occurred'}. Using sample analysis as fallback.`);
       
-      // Use fallback data after a short delay to make it clear something went wrong
-      setTimeout(() => {
-        setResults({
-          ...FALLBACK_ANALYSIS,
-          property: propertyData,
-          model_used: "Sample Analysis (Error Fallback)",
-          models_attempted: ["Error occurred during API call"]
-        });
-        setUsedFallback(true);
-      }, 500);
+      // Show detailed error without mentioning fallback
+      setError(`Error: ${err.message || 'An unknown error occurred'}`);
+      
+      // If the error was due to a timeout, mention that specifically
+      if (err.name === 'AbortError') {
+        setError('Request timed out after 30 seconds. The server might be overloaded or the analysis is taking too long.');
+      }
+      
+      // Don't use fallback data - let the user see the detailed error instead
+      setUsedFallback(false);
     } finally {
       setIsAnalyzing(false);
     }
@@ -177,7 +202,7 @@ export default function Home() {
               ) : (
                 <p className="mt-2 text-sm text-gray-500">
                   Your API key is only used for this session and is not stored on our servers. 
-                  The system uses GPT-3.5 Turbo for reliable analysis.
+                  The system uses a cascade of o1 → o1-mini → GPT-3.5-Turbo models.
                 </p>
               )}
             </div>
@@ -187,6 +212,16 @@ export default function Home() {
             {error && (
               <div className="mt-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl">
                 {error}
+              </div>
+            )}
+            
+            {/* Debug Information Section */}
+            {debugInfo && (
+              <div className="mt-6 p-4 bg-gray-100 border border-gray-300 text-gray-800 rounded-xl">
+                <h3 className="font-bold text-lg mb-2">Debug Information:</h3>
+                <pre className="text-xs overflow-auto max-h-96 p-2 bg-gray-900 text-gray-200 rounded">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
               </div>
             )}
           </div>
@@ -203,7 +238,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-gray-600 mt-6 font-medium">Analyzing property with OpenAI...</p>
-                <p className="text-sm text-gray-500 mt-2">Using GPT-3.5 Turbo for reliable analysis</p>
+                <p className="text-sm text-gray-500 mt-2">Using model cascade: o1 → o1-mini → GPT-3.5-Turbo</p>
               </div>
             ) : results ? (
               <>
@@ -211,7 +246,7 @@ export default function Home() {
                   <div className="mb-6 p-4 bg-yellow-50 border border-yellow-100 text-yellow-800 rounded-xl">
                     {skipAPI ? 
                       "Using sample analysis mode. For AI-powered analysis, toggle off 'Use Sample Analysis' and enter your OpenAI API key." :
-                      "Using sample analysis due to API issues. For actual analysis, please check your API key or try again later."}
+                      "API error occurred. Check error details above for debugging information."}
                   </div>
                 )}
                 <AnalysisResults results={results} />
