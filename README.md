@@ -1,10 +1,10 @@
 # AI-Powered Commercial Real Estate Deal Finder
 
-This tool automatically analyzes commercial real estate listings based on specific investment criteria, and identifies potential opportunities by evaluating seller motivation, transaction complexity, and property characteristics.
+This tool analyzes commercial real estate listings using OpenAI to identify potential investment opportunities based on seller motivation, transaction complexity, and property characteristics.
 
-## Quick Start for Local Testing
+## Quick Start
 
-To test the basic functionality without requiring API keys:
+To analyze listings using OpenAI:
 
 1. Clone this repository:
 ```bash
@@ -19,35 +19,59 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. You have two options to test the analyzer:
-
-### Option 1: Analyze the provided sample listing
+3. Run the OpenAI analyzer script:
 ```bash
-python analyze_sample.py
+python analyze_with_openai.py
 ```
 
-### Option 2: Analyze your own listing
-```bash
-python test_listing_analyzer.py
-```
-When prompted, paste the LoopNet property description and type 'DONE' on a new line when finished.
+4. When prompted, enter your OpenAI API key and paste a property listing
 
-4. Review the analysis results, which will also be saved to the `results/` directory.
+5. Review the detailed AI analysis results
+
+## OpenAI Integration
+
+The tool uses OpenAI's language models to perform a sophisticated analysis of property listings:
+
+### Available Models
+
+- **GPT-3.5 Turbo** (default): Good balance of performance and cost
+- **GPT-4**: More accurate but more expensive and slower
+
+### Configuration
+
+You can configure the OpenAI integration by creating a `config/openai_config.yaml` file based on the example:
+
+```bash
+cp config/openai_config.example.yaml config/openai_config.yaml
+```
+
+Then edit the configuration file to set your API key and preferred model:
+
+```yaml
+openai:
+  api_key: "your-api-key-here"  # Your OpenAI API key
+  model: "gpt-3.5-turbo"        # Model to use
+```
 
 ## How the Analyzer Works
 
-The analyzer uses keyword matching and contextual analysis to evaluate commercial real estate listings based on three main criteria:
+The OpenAI-based analyzer evaluates commercial real estate listings based on three main criteria:
 
-1. **Seller Motivation**: Looks for indicators that the seller is motivated to close a deal quickly, potentially at favorable terms.
-2. **Transaction Complexity**: Identifies complex transaction situations that might reduce competition or create unique opportunities.
-3. **Property Characteristics**: Finds properties with value-add potential or situations where perceived risk exceeds actual risk.
+1. **Seller Motivation**: Identifies signs that the seller may be motivated to sell quickly or at favorable terms.
 
-### Scoring System
+2. **Transaction Complexity**: Detects factors that might reduce buyer competition or create unique opportunities.
 
-Each category receives a score from 1-10 based on the keywords detected:
-- The more keywords identified, the higher the score (max 10 per category)
-- The total investment score is a weighted average of the three category scores
-- Default weights: Seller Motivation (40%), Transaction Complexity (30%), Property Characteristics (30%)
+3. **Property Characteristics**: Recognizes features indicating value-add potential or situations where perceived risk exceeds actual risk.
+
+### Analysis Output
+
+For each listing, the analyzer provides:
+
+- Numerical scores (1-10) for each investment criteria category
+- A total investment score based on weighted averages
+- Detailed explanations for each score
+- Identified keywords and signals in each category
+- An overall investment recommendation
 
 ## Investment Criteria
 
@@ -78,84 +102,35 @@ The tool evaluates listings based on three main categories:
 - Below Replacement Cost
 - Unique/Niche Property Types
 
-## Customizing the Analysis
+## Alternative: Basic Keyword Analysis
 
-### Adding or Modifying Keywords
+If you prefer not to use OpenAI, the repository also includes a basic keyword-matching analyzer:
 
-You can customize the keywords used for analysis by editing the `config/simple_config.yaml` file:
-
-```yaml
-nlp:
-  keywords:
-    seller_motivation:
-      - "motivated"
-      - "must sell"
-      # Add more keywords here
-    
-    transaction_complexity:
-      - "foreclosure"
-      - "bankruptcy"
-      # Add more keywords here
-    
-    property_characteristics:
-      - "below market"
-      - "value add"
-      # Add more keywords here
-```
-
-### Adjusting Scoring Weights
-
-You can adjust the importance of each category by changing the weights in the `config/simple_config.yaml` file:
-
-```yaml
-scoring:
-  seller_motivation_weight: 0.4
-  transaction_complexity_weight: 0.3
-  property_characteristics_weight: 0.3
-```
-
-## Full Functionality (Requires API Keys)
-
-For the complete automated solution that scrapes LoopNet listings daily:
-
-1. Copy the example config file:
 ```bash
-cp config/simple_config.yaml config/config.yaml
+python test_listing_analyzer.py
 ```
 
-2. Edit `config/config.yaml` to add your API keys and customize settings:
-   - Apify API Key for LoopNet Scraper
-   - OpenAI API Key for advanced NLP (optional)
-   - Google Sheets credentials for results output
+Or to analyze the included sample listing:
 
-3. Set up Google Sheets API access:
-   - Follow the Google Sheets API quickstart guide
-   - Download credentials.json and place it in the project root
-   - Share your Google Sheet with the client_email in credentials.json
-
-4. Run the main script:
 ```bash
-python main.py
+python analyze_sample.py
 ```
 
 ## Project Structure
 
 ```
 cre-deal-finder/
-├── main.py                    # Main script (full automation)
-├── test_listing_analyzer.py   # Interactive test script
+├── main.py                    # Main script for full automation (future)
+├── analyze_with_openai.py      # OpenAI-based analyzer script
+├── test_listing_analyzer.py   # Basic keyword-based analyzer script
 ├── analyze_sample.py          # Sample analysis script
-├── scraper/
-│   └── loopnet.py             # LoopNet scraper integration
 ├── analyzer/
-│   ├── simple_nlp.py          # Basic NLP processing
+│   ├── openai_analyzer.py      # OpenAI integration for analysis
+│   ├── simple_nlp.py          # Basic keyword analysis
 │   └── scoring.py             # Scoring algorithms
-├── output/
-│   └── sheets.py              # Google Sheets integration
-├── utils/
-│   └── filtering.py           # Geographic filtering
 ├── config/
-│   └── simple_config.yaml     # Configuration settings
+│   ├── openai_config.example.yaml # Example OpenAI configuration
+│   └── simple_config.yaml     # Configuration for keyword analysis
 ├── sample_listings/           # Sample LoopNet listings
 │   └── motivated_seller.txt   # Example listing with investment signals
 └── requirements.txt           # Project dependencies
@@ -165,11 +140,11 @@ cre-deal-finder/
 
 Planned enhancements for this tool include:
 
-1. **Advanced NLP**: Integration with OpenAI's API for more sophisticated language understanding
-2. **Multi-Source Scraping**: Add support for other CRE listing sites (e.g., Crexi)
-3. **Email Notifications**: Automatic alerts for high-potential properties
-4. **Historical Tracking**: Database storage for tracking listing history and price changes
-5. **Web Dashboard**: Interactive UI for managing and reviewing deal opportunities
+1. **Automated Scraping**: Integration with the Apify LoopNet Scraper
+2. **Geographic Filtering**: Focus on properties in specific regions
+3. **Google Sheets Integration**: Automatic export of analyzed opportunities
+4. **Multi-Source Scraping**: Support for other CRE listing sites (e.g., Crexi)
+5. **Email Notifications**: Automatic alerts for high-potential properties
 
 ## License
 
