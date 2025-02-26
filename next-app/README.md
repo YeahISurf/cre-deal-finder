@@ -1,4 +1,4 @@
-# CRE Deal Finder - Next.js Frontend
+# PFISH LOBSTER COIN CRE Deal Finder - Next.js Frontend
 
 A modern React-based frontend for the CRE Deal Finder tool, optimized for deployment on Vercel.
 
@@ -42,7 +42,7 @@ You can customize the OpenAI model used by editing the `/pages/api/analyze.js` f
 
 ```js
 const response = await openai.chat.completions.create({
-  model: "gpt-3.5-turbo", // Change to "gpt-4" for higher accuracy
+  model: "o1", // Using the most advanced model available with free credits
   // ... other options
 });
 ```

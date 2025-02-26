@@ -48,7 +48,7 @@ def create_default_config():
 def show_welcome():
     """Display welcome message"""
     print("\n" + "=" * 80)
-    print("CRE DEAL FINDER - OPENAI ANALYZER")
+    print("PFISH LOBSTER COIN CRE DEAL FINDER - OPENAI ANALYZER")
     print("=" * 80)
     print("This tool analyzes commercial real estate listings using OpenAI to identify potential opportunities")
     print("based on seller motivation, transaction complexity, and property characteristics.")
@@ -149,7 +149,7 @@ def save_result(listing, results):
 def display_results(listing, results):
     """Display analysis results in a readable format"""
     print("\n" + "=" * 80)
-    print(f"OPENAI ANALYSIS RESULTS FOR: {listing['name']}")
+    print(f"PFISH LOBSTER COIN CRE DEAL FINDER - ANALYSIS RESULTS FOR: {listing['name']}")
     print("=" * 80)
     
     print(f"Property Type: {listing['property_type']}")

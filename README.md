@@ -1,4 +1,4 @@
-# AI-Powered Commercial Real Estate Deal Finder
+# PFISH LOBSTER COIN CRE Deal Finder
 
 This tool analyzes commercial real estate listings using OpenAI to identify potential investment opportunities based on seller motivation, transaction complexity, and property characteristics.
 

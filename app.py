@@ -15,7 +15,7 @@ from analyzer.openai_analyzer import OpenAIAnalyzer
 
 # Set page configuration
 st.set_page_config(
-    page_title="CRE Deal Finder",
+    page_title="PFISH LOBSTER COIN CRE Deal Finder",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -219,7 +219,7 @@ def display_results(listing, results):
 
 def main():
     """Main application function"""
-    st.markdown("<h1 class='main-header'>🏢 CRE Deal Finder</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>🏢 PFISH LOBSTER COIN CRE Deal Finder</h1>", unsafe_allow_html=True)
     st.markdown(
         "AI-powered analysis of commercial real estate listings to identify investment opportunities "
         "based on seller motivation, transaction complexity, and property characteristics."

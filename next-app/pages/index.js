@@ -56,7 +56,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Head>
-        <title>CRE Deal Finder</title>
+        <title>PFISH LOBSTER COIN CRE Deal Finder</title>
         <meta name="description" content="AI-powered commercial real estate deal finder" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -64,7 +64,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center mb-6">
           <BuildingOfficeIcon className="h-8 w-8 text-primary-600 mr-2" />
-          <h1 className="text-3xl font-bold text-gray-900">CRE Deal Finder</h1>
+          <h1 className="text-3xl font-bold text-gray-900">PFISH LOBSTER COIN CRE Deal Finder</h1>
         </div>
         
         <p className="text-center text-gray-600 mb-8">
@@ -123,7 +123,7 @@ export default function Home() {
 
       <footer className="bg-white border-t mt-12 py-6">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>CRE Deal Finder &copy; {new Date().getFullYear()}</p>
+          <p>PFISH LOBSTER COIN CRE Deal Finder &copy; {new Date().getFullYear()}</p>
           <p className="mt-2">Powered by OpenAI and Next.js</p>
         </div>
       </footer>
