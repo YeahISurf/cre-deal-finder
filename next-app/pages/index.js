@@ -35,6 +35,7 @@ export default function Home() {
   const [usedFallback, setUsedFallback] = useState(false);
   const [skipAPI, setSkipAPI] = useState(false);
   const [debugInfo, setDebugInfo] = useState(null);
+  const [rawResponse, setRawResponse] = useState('');
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey && !skipAPI) {
@@ -51,6 +52,8 @@ export default function Home() {
     setIsAnalyzing(true);
     setUsedFallback(false);
     setDebugInfo(null);
+    setRawResponse('');
+    setResults(null);
 
     // If skipAPI is true, use the fallback analysis directly
     if (skipAPI) {
@@ -70,7 +73,7 @@ export default function Home() {
       console.log('Starting API request at:', new Date().toISOString());
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout (increased for model cascade)
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for model cascade
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -93,6 +96,14 @@ export default function Home() {
       const text = await response.text();
       console.log('Raw response body (first 500 chars):', text.substring(0, 500));
       
+      // Store the raw response for debugging
+      setRawResponse(text);
+      
+      // If the response is empty
+      if (!text || text.trim() === '') {
+        throw new Error('Empty response received from server');
+      }
+      
       let data;
       try {
         // Try to parse as JSON
@@ -101,7 +112,7 @@ export default function Home() {
       } catch (parseError) {
         console.error('JSON parse error:', parseError);
         console.error('Non-JSON response received');
-        throw new Error(`Server returned invalid JSON: ${text.substring(0, 100)}...`);
+        throw new Error(`Server returned invalid JSON response: ${text.substring(0, 100)}...`);
       }
       
       // Check if it's an error response
@@ -120,16 +131,32 @@ export default function Home() {
     } catch (err) {
       console.error('Analysis error:', err);
       
-      // Show detailed error without mentioning fallback
+      // Display detailed error info
       setError(`Error: ${err.message || 'An unknown error occurred'}`);
+      
+      // Store raw response in debug info if it's not already JSON
+      if (rawResponse && !debugInfo) {
+        try {
+          // Try to see if it's valid JSON first
+          JSON.parse(rawResponse);
+        } catch (e) {
+          // If not valid JSON, show the raw response
+          setDebugInfo({
+            error: true,
+            message: "Raw server response (not valid JSON)",
+            raw_response: rawResponse
+          });
+        }
+      }
       
       // If the error was due to a timeout, mention that specifically
       if (err.name === 'AbortError') {
-        setError('Request timed out after 30 seconds. The server might be overloaded or the analysis is taking too long.');
+        setError('Request timed out after 60 seconds. The server might be overloaded or the analysis is taking too long.');
       }
       
-      // Don't use fallback data - let the user see the detailed error instead
+      // Don't use fallback data anymore - show the actual error
       setUsedFallback(false);
+      setResults(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -211,17 +238,30 @@ export default function Home() {
 
             {error && (
               <div className="mt-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl">
-                {error}
+                <h3 className="font-bold text-lg mb-2">Error:</h3>
+                <p>{error}</p>
               </div>
             )}
             
             {/* Debug Information Section */}
-            {debugInfo && (
+            {(debugInfo || rawResponse) && (
               <div className="mt-6 p-4 bg-gray-100 border border-gray-300 text-gray-800 rounded-xl">
                 <h3 className="font-bold text-lg mb-2">Debug Information:</h3>
-                <pre className="text-xs overflow-auto max-h-96 p-2 bg-gray-900 text-gray-200 rounded">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
+                
+                {debugInfo && (
+                  <pre className="text-xs overflow-auto max-h-96 p-2 bg-gray-900 text-gray-200 rounded mb-4">
+                    {JSON.stringify(debugInfo, null, 2)}
+                  </pre>
+                )}
+                
+                {rawResponse && !debugInfo && (
+                  <div>
+                    <h4 className="font-semibold mb-1">Raw Server Response:</h4>
+                    <pre className="text-xs overflow-auto max-h-40 p-2 bg-gray-900 text-gray-200 rounded">
+                      {rawResponse.substring(0, 1000)}{rawResponse.length > 1000 ? '...' : ''}
+                    </pre>
+                  </div>
+                )}
               </div>
             )}
           </div>
