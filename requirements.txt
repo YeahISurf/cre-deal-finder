@@ -5,6 +5,9 @@ python-dotenv==1.0.0
 # OpenAI API
 openai==1.5.0
 
+# UI
+streamlit==1.31.0
+
 # The following packages will be needed for the full version
 # but are not required for basic local testing:
 # apify-client==1.0.0
