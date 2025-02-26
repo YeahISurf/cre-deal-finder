@@ -1,0 +1,74 @@
+# Example configuration file
+# Copy to config.yaml and update with your values
+
+# Apify configuration
+apify:
+  api_key: "YOUR_APIFY_API_KEY"
+  actor_id: "epctex/loopnet-scraper"
+  search_params:
+    property_types: ["office", "industrial", "retail", "multifamily", "land", "specialty"]
+    search_terms: ["for sale"]
+
+# Target states for filtering
+target_states: ["OH", "IN", "IL", "KY", "MO", "KS", "NE", "OK", "TX", "CO", "NM", "AZ", "UT", "NV", "CA", "OR", "WA", "ID", "MT", "WY", "ND", "SD"]
+
+# NLP configuration
+nlp:
+  provider: "openai"  # or "spacy"
+  openai_api_key: "YOUR_OPENAI_API_KEY"
+  model: "gpt-4"  # or "gpt-3.5-turbo"
+  keywords:
+    seller_motivation:
+      - "motivated"
+      - "must sell"
+      - "priced to sell"
+      - "urgent"
+      - "distressed"
+      - "liquidation"
+      - "bankruptcy"
+      - "foreclosure"
+      - "below market"
+      - "quick sale"
+      - "owner retiring"
+      - "relocating"
+      - "estate sale"
+    transaction_complexity:
+      - "foreclosure"
+      - "bankruptcy"
+      - "short sale"
+      - "legal issues"
+      - "title issues"
+      - "tax sale"
+      - "auction"
+      - "portfolio"
+      - "multiple parcels"
+      - "complex"
+      - "special purpose"
+      - "encumbrance"
+    property_characteristics:
+      - "below market"
+      - "value add"
+      - "upside"
+      - "fixer upper"
+      - "vacant"
+      - "deferred maintenance"
+      - "renovation"
+      - "redevelopment"
+      - "reposition"
+      - "class b"
+      - "class c"
+      - "distressed"
+      - "underperforming"
+
+# Scoring configuration
+scoring:
+  seller_motivation_weight: 0.4
+  transaction_complexity_weight: 0.3
+  property_characteristics_weight: 0.3
+  highlight_threshold: 7  # Highlight scores above this value
+
+# Google Sheets configuration
+google_sheets:
+  credentials_file: "credentials.json"
+  sheet_id: "YOUR_GOOGLE_SHEET_ID"
+  worksheet_name: "Opportunities"
