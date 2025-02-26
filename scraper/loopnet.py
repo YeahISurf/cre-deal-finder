@@ -103,7 +103,7 @@ class LoopNetScraper:
         
         for prop_type in property_types:
             for term in search_terms:
-                url = f"https://www.loopnet.com/search/{prop_type}-for-sale/?sk={term.replace(' ', '+')}"
+                url = f"https://www.loopnet.com/search/{prop_type}-for-sale/?sk={term.replace(' ', '+')}" 
                 start_urls.append({"url": url})
         
         return start_urls
