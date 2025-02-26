@@ -1,0 +1,61 @@
+# Simple configuration file for local testing
+
+# NLP configuration
+nlp:
+  keywords:
+    seller_motivation:
+      - "motivated"
+      - "must sell"
+      - "priced to sell"
+      - "urgent"
+      - "distressed"
+      - "liquidation"
+      - "bankruptcy"
+      - "foreclosure"
+      - "below market"
+      - "quick sale"
+      - "owner retiring"
+      - "relocating"
+      - "estate sale"
+      - "discount"
+      - "reduced"
+      - "price drop"
+    transaction_complexity:
+      - "foreclosure"
+      - "bankruptcy"
+      - "short sale"
+      - "legal issues"
+      - "title issues"
+      - "tax sale"
+      - "auction"
+      - "portfolio"
+      - "multiple parcels"
+      - "complex"
+      - "special purpose"
+      - "encumbrance"
+      - "lease restrictions"
+      - "environmental"
+    property_characteristics:
+      - "below market"
+      - "value add"
+      - "upside"
+      - "fixer upper"
+      - "vacant"
+      - "deferred maintenance"
+      - "renovation"
+      - "redevelopment"
+      - "reposition"
+      - "class b"
+      - "class c"
+      - "distressed"
+      - "underperforming"
+      - "outdated"
+      - "high vacancy"
+      - "mismanaged"
+
+# Scoring configuration
+scoring:
+  seller_motivation_weight: 0.4
+  transaction_complexity_weight: 0.3
+  property_characteristics_weight: 0.3
+  highlight_threshold: 7  # Highlight scores above this value
