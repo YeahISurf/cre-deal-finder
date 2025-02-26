@@ -2,9 +2,9 @@
 
 This tool analyzes commercial real estate listings using OpenAI to identify potential investment opportunities based on seller motivation, transaction complexity, and property characteristics.
 
-## Quick Start
+## Quick Start with Web UI
 
-To analyze listings using OpenAI:
+To use the user-friendly web interface:
 
 1. Clone this repository:
 ```bash
@@ -19,14 +19,35 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Run the OpenAI analyzer script:
+3. Launch the web application:
+```bash
+streamlit run app.py
+```
+
+4. Open your browser to the displayed URL (typically http://localhost:8501)
+
+5. Enter your OpenAI API key in the sidebar and analyze properties!
+
+## UI Features
+
+![CRE Deal Finder UI](https://i.imgur.com/placeholder-ui-screenshot.png)
+
+The web interface provides:
+
+- **Intuitive Input**: Enter property details or paste listing descriptions
+- **Sample Data**: Use the included sample listing to test the system
+- **File Upload**: Analyze listings from text files
+- **Visual Scoring**: Color-coded scores and expandable analysis sections
+- **Model Selection**: Choose between different OpenAI models
+- **Results Export**: Automatic saving of analysis results
+
+## Command Line Options
+
+If you prefer to use the command line instead of the UI:
+
 ```bash
 python analyze_with_openai.py
 ```
-
-4. When prompted, enter your OpenAI API key and paste a property listing
-
-5. Review the detailed AI analysis results
 
 ## OpenAI Integration
 
@@ -120,6 +141,7 @@ python analyze_sample.py
 
 ```
 cre-deal-finder/
+├── app.py                     # Streamlit web application
 ├── main.py                    # Main script for full automation (future)
 ├── analyze_with_openai.py      # OpenAI-based analyzer script
 ├── test_listing_analyzer.py   # Basic keyword-based analyzer script
