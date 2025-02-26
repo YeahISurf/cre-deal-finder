@@ -23,9 +23,9 @@ const FALLBACK_ANALYSIS = {
   summary: "This property represents a strong investment opportunity with a motivated seller and clear value-add potential through addressing deferred maintenance and raising below-market rents."
 };
 
-// Function to analyze property description using the OpenAI API
-async function analyzeWithOpenAI(apiKey, property, model = "gpt-3.5-turbo") {
-  console.log(`Starting analysis with model: ${model}`);
+// Function to analyze property with o1 model using appropriate parameters
+async function analyzeWithO1(apiKey, property) {
+  console.log('Starting analysis with o1 model');
   
   try {
     // Initialize OpenAI client
@@ -33,57 +33,114 @@ async function analyzeWithOpenAI(apiKey, property, model = "gpt-3.5-turbo") {
       apiKey: apiKey
     });
     
-    // Prepare the prompt
-    const messages = [
-      {
-        role: "system",
-        content: `You are a commercial real estate investment analyst. Analyze the property listing and provide:
-        1. A score from 1-10 for seller motivation
-        2. A score from 1-10 for transaction complexity
-        3. A score from 1-10 for property characteristics
-        4. A total weighted score (40% seller motivation, 30% transaction complexity, 30% property characteristics)
-        5. Brief explanation and keywords for each category
-        6. A summary recommendation
-        
-        IMPORTANT: Your response must be ONLY a valid JSON object with no preamble or additional text.`
-      },
-      {
-        role: "user",
-        content: `Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}`
-      }
-    ];
-    
-    // Make the API call
-    console.log('Calling OpenAI API...');
-    const completion = await openai.chat.completions.create({
-      model: model,
-      messages: messages,
+    // For o1, we need to use 'max_completion_tokens' instead of 'max_tokens'
+    // as shown in the error logs
+    const response = await openai.chat.completions.create({
+      model: "o1",
+      messages: [
+        {
+          role: "user",
+          content: `You are a commercial real estate investment analyst. Analyze this property listing and provide scores from 1-10 for seller motivation, transaction complexity, and property characteristics, plus a total weighted score and analysis.
+
+Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}\n\nProvide your response as a JSON object with scores, explanations, and identified keywords.`
+        }
+      ],
       temperature: 0.1,
+      max_completion_tokens: 1500,  // Correct parameter for o1
       response_format: { type: "json_object" }
     });
     
-    // Process the response
-    console.log('Received response from OpenAI API');
-    const responseContent = completion.choices[0].message.content;
-    console.log('Response content (first 100 chars):', responseContent.substring(0, 100));
-    
-    try {
-      // Parse JSON response
-      const parsed = JSON.parse(responseContent);
-      
-      // Add metadata
-      return {
-        ...parsed,
-        model_used: model,
-        models_attempted: [model]
-      };
-    } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-      console.error('Response content causing error:', responseContent);
-      throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
-    }
+    console.log('Received response from o1');
+    const content = response.choices[0].message.content;
+    return {
+      ...JSON.parse(content),
+      model_used: "o1",
+      models_attempted: ["o1"]
+    };
   } catch (error) {
-    console.error(`Error with OpenAI API:`, error);
+    console.error('Error with o1 model:', error);
+    throw error;
+  }
+}
+
+// Function to analyze property with o1-mini model using appropriate parameters
+async function analyzeWithO1Mini(apiKey, property) {
+  console.log('Starting analysis with o1-mini model');
+  
+  try {
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: apiKey
+    });
+    
+    // For o1-mini, we can't use 'system' role and need to use max_completion_tokens
+    // as shown in the error logs
+    const response = await openai.chat.completions.create({
+      model: "o1-mini",
+      messages: [
+        {
+          // Using user role instead of system role
+          role: "user",
+          content: `You are a commercial real estate investment analyst. Analyze this property listing and provide scores from 1-10 for seller motivation, transaction complexity, and property characteristics, plus a total weighted score and analysis.
+
+Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}\n\nProvide your response as a JSON object with scores, explanations, and identified keywords.`
+        }
+      ],
+      temperature: 0.1,
+      max_completion_tokens: 1500,  // Correct parameter for o1-mini
+      response_format: { type: "json_object" }
+    });
+    
+    console.log('Received response from o1-mini');
+    const content = response.choices[0].message.content;
+    return {
+      ...JSON.parse(content),
+      model_used: "o1-mini",
+      models_attempted: ["o1", "o1-mini"]
+    };
+  } catch (error) {
+    console.error('Error with o1-mini model:', error);
+    throw error;
+  }
+}
+
+// Function to analyze property with GPT models (fallback)
+async function analyzeWithGPT(apiKey, property) {
+  console.log('Starting analysis with GPT-3.5-Turbo model');
+  
+  try {
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: apiKey
+    });
+    
+    // Standard format for GPT models
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics.`
+        },
+        {
+          role: "user",
+          content: `Property: ${property.name}\nType: ${property.property_type}\nLocation: ${property.location}\nPrice: ${property.price}\n\nDescription: ${property.description}`
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 1500,  // Correct parameter for GPT models
+      response_format: { type: "json_object" }
+    });
+    
+    console.log('Received response from GPT-3.5-Turbo');
+    const content = response.choices[0].message.content;
+    return {
+      ...JSON.parse(content),
+      model_used: "gpt-3.5-turbo",
+      models_attempted: ["o1", "o1-mini", "gpt-3.5-turbo"]
+    };
+  } catch (error) {
+    console.error('Error with GPT-3.5-Turbo model:', error);
     throw error;
   }
 }
@@ -106,19 +163,39 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Property description is required' });
   }
   
+  const modelsAttempted = [];
+  
   try {
-    // Use a more reliable model by default
-    const result = await analyzeWithOpenAI(apiKey, property, "gpt-3.5-turbo");
-    return res.status(200).json(result);
+    // Try o1 first (most premium model)
+    try {
+      modelsAttempted.push("o1");
+      const o1Result = await analyzeWithO1(apiKey, property);
+      return res.status(200).json(o1Result);
+    } catch (o1Error) {
+      console.log("o1 model failed, falling back to o1-mini");
+      
+      // If o1 fails, try o1-mini
+      try {
+        modelsAttempted.push("o1-mini");
+        const o1MiniResult = await analyzeWithO1Mini(apiKey, property);
+        return res.status(200).json(o1MiniResult);
+      } catch (o1MiniError) {
+        console.log("o1-mini model failed, falling back to GPT-3.5-Turbo");
+        
+        // If o1-mini fails, use GPT-3.5-Turbo as reliable fallback
+        modelsAttempted.push("gpt-3.5-turbo");
+        const gptResult = await analyzeWithGPT(apiKey, property);
+        return res.status(200).json(gptResult);
+      }
+    }
   } catch (error) {
-    console.error('Failed to analyze property:', error);
+    console.error('All models failed:', error);
     
-    // Instead of trying to handle errors or retry, just return the fallback
-    // This ensures the user always gets a response
+    // Return fallback analysis if all models fail
     return res.status(200).json({
       ...FALLBACK_ANALYSIS,
-      model_used: "Sample Analysis (API Error)",
-      models_attempted: ["gpt-3.5-turbo"],
+      model_used: "Sample Analysis (All API calls failed)",
+      models_attempted: modelsAttempted,
       error_message: error.message || "Unknown error"
     });
   }

@@ -1,8 +1,8 @@
-# PFISH LOBSTER COIN CRE Deal Finder v1.2.0
+# PFISH LOBSTER COIN CRE Deal Finder v1.3.0
 
 ![Project Status](https://img.shields.io/badge/status-beta-yellow)
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--3.5--turbo-green)
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![OpenAI](https://img.shields.io/badge/OpenAI-o1%20%7C%20o1--mini%20%7C%20GPT--3.5--turbo-green)
 
 Premium AI-powered analysis of commercial real estate listings to identify investment opportunities based on seller motivation, transaction complexity, and property characteristics.
 
@@ -18,29 +18,29 @@ This tool automatically analyzes commercial real estate listings using OpenAI to
 
 ## Project Status and Known Issues
 
-**Current Status**: Beta (v1.2.0)
+**Current Status**: Beta (v1.3.0)
 
 ### 🐛 Known Issues
 
-1. **OpenAI API Connection Issues**: 
-   - Intermittent "Unexpected token 'A', "An error o"... is not valid JSON" errors
-   - This appears to be related to OpenAI API formatting inconsistencies or rate limiting
-   - We've implemented fallback mechanisms but sometimes the API call still fails
-   - The app will use sample analysis in case of error, so functionality is maintained
+1. **OpenAI o1 Model Parameter Issues**: 
+   - Fixed in v1.3.0: o1 models require `max_completion_tokens` instead of `max_tokens`
+   - Fixed in v1.3.0: o1-mini does not support 'system' role in messages
+   - We now handle these model-specific requirements correctly
 
-2. **Model Availability**: 
-   - Initially attempted to use premium models (o1, o1-mini) but encountered access issues
-   - Currently using gpt-3.5-turbo for reliability but may miss some nuances in analysis
-   - Premium models would likely provide better analysis if access issues are resolved
+2. **API Reliability**: 
+   - Occasional timeouts or rate-limiting from OpenAI API
+   - Model availability may vary based on your account permissions
+   - Multi-model cascade system ensures some model will work
 
-3. **Limited Error Details**:
-   - OpenAI API sometimes returns generic error messages
-   - Difficult to diagnose exact cause of API failures
-   - More detailed error reporting would help troubleshooting
+3. **Error Details**:
+   - We now log detailed error information for better diagnosis
+   - Implemented proper error handling for each model type
+   - Added fallback mechanisms to ensure analysis is always available
 
 ### 🔧 Troubleshooting
 
 - **API Key Issues**: Ensure you're using a valid OpenAI API key with appropriate quota and model access
+- **Model Access**: Check your OpenAI account to see which models you have access to
 - **Fallback Mode**: If encountering persistent API issues, use the "Sample Analysis" mode toggle
 - **Error Details**: Check browser console for more detailed error messages
 - **Rate Limiting**: If you receive errors, wait a few minutes before trying again
@@ -77,11 +77,11 @@ npm run dev
 
 ### How It Works
 
-1. **API Integration**: The application uses the OpenAI Chat Completions API to analyze property listings
-2. **Prompt Engineering**: Carefully crafted prompts guide the AI to evaluate specific investment criteria
-3. **Scoring System**: Each property receives scores (1-10) across three categories and a weighted total
-4. **Fallback Mechanism**: In case of API errors, the system uses predefined sample analyses
-5. **UI/UX**: Premium Apple-inspired interface with intuitive controls and visualizations
+1. **Model Cascade**: The application tries models in this order: o1 → o1-mini → GPT-3.5-Turbo
+2. **Model-Specific Handling**: Each model has custom parameters and prompt formats
+3. **Prompt Engineering**: Carefully crafted prompts guide the AI to evaluate specific investment criteria
+4. **Scoring System**: Each property receives scores (1-10) across three categories and a weighted total
+5. **Fallback Mechanism**: In case of API errors, the system uses predefined sample analyses
 
 ### Technical Architecture
 
@@ -122,7 +122,15 @@ The tool evaluates listings based on three main categories:
 
 ## Version History
 
-### v1.2.0 (Current)
+### v1.3.0 (Current)
+- Fixed o1 and o1-mini model integration issues:
+  - Now using `max_completion_tokens` instead of `max_tokens` for o1 models
+  - Removed 'system' role messages for o1-mini model
+- Enhanced model cascade system with better error handling
+- Added detailed error logging for diagnostics
+- Updated README with exact error details and fixes
+
+### v1.2.0
 - Simplified API approach to use only GPT-3.5-Turbo for reliability
 - Fixed JSON parsing errors with improved error handling
 - Enhanced premium Apple-inspired UI
@@ -143,17 +151,11 @@ The tool evaluates listings based on three main categories:
 
 ## Future Roadmap
 
-### v1.3.0 (Planned)
-- Resolve OpenAI API connection issues
+### v1.4.0 (Planned)
 - Add support for multiple property analysis
 - Improve error reporting and handling
-- Enhance model selection options
-
-### v1.4.0 (Planned)
 - Add property comparison features
 - Implement data persistence (save analyses)
-- Add export functionality (PDF, CSV)
-- Enhanced visualizations
 
 ### v2.0.0 (Future)
 - Integrate with LoopNet scraper for automated listing analysis
