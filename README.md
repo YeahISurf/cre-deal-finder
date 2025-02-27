@@ -1,7 +1,7 @@
 # PFISH CRE AI DEAL FINDER
 
 ![Project Status](https://img.shields.io/badge/status-beta-yellow)
-![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![Version](https://img.shields.io/badge/version-1.4.0-blue)
 ![OpenAI](https://img.shields.io/badge/OpenAI-o1%20%7C%20o1--mini%20%7C%20GPT--3.5--turbo-green)
 
 Premium AI-powered analysis of commercial real estate listings to identify investment opportunities based on seller motivation, transaction complexity, and property characteristics.
@@ -18,15 +18,15 @@ This tool automatically analyzes commercial real estate listings using OpenAI to
 
 ## Project Status and Known Issues
 
-**Current Status**: Beta (v1.3.0)
+**Current Status**: Beta (v1.4.0)
 
 ### 🐛 Known Issues
 
 1. **OpenAI o1 Model Parameter Issues**: 
-   - Fixed in v1.3.0: o1 models require `max_completion_tokens` instead of `max_tokens`
-   - Fixed in v1.3.0: o1-mini does not support 'system' role in messages
-   - Fixed in v1.3.0: o1-mini does not support response_format parameter
-   - We now handle these model-specific requirements correctly
+   - ✅ Fixed in v1.3.0: o1 models require `max_completion_tokens` instead of `max_tokens`
+   - ✅ Fixed in v1.3.0: o1-mini does not support 'system' role in messages
+   - ✅ Fixed in v1.3.0: o1-mini does not support response_format parameter
+   - ✅ We now handle these model-specific requirements correctly
 
 2. **API Reliability**: 
    - Occasional timeouts or rate-limiting from OpenAI API
@@ -276,7 +276,14 @@ The tool evaluates listings based on three main categories:
 
 ## Version History
 
-### v1.3.0 (Current)
+### v1.4.0 (Current)
+- Enhanced documentation with detailed model testing instructions
+- Added web preview for easier demonstration
+- Improved error handling for edge cases
+- Updated README with comprehensive troubleshooting guide
+- Added more detailed comments to code for better maintainability
+
+### v1.3.0
 - Fixed o1 and o1-mini model integration issues:
   - Now using `max_completion_tokens` instead of `max_tokens` for o1 models
   - Removed 'system' role messages for o1-mini model
@@ -437,7 +444,3 @@ cre-deal-finder/
 ├── .env.example                # Example environment variables
 └── README.md                   # Main documentation
 ```
-
-## License
-
-MIT License

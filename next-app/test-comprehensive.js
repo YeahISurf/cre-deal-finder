@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 
 // OpenAI API key should be provided as an environment variable or through a secure method
 // DO NOT hardcode API keys in source code
-const API_KEY = process.env.OPENAI_API_KEY || 'REPLACE_WITH_YOUR_KEY'; // Replace with your API key when testing locally
+const API_KEY = process.env.OPENAI_API_KEY || ''; // API key should be set in .env file
 
 
 // Test property listings with different characteristics
@@ -120,6 +120,15 @@ async function analyzeProperty(property, index) {
   console.log(`\n========== ANALYZING PROPERTY ${index + 1}: ${property.name} ==========\n`);
   
   try {
+    // Check if API key is available
+    if (!API_KEY) {
+      console.error('Error: OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable in your .env file.');
+      return {
+        property: property.name,
+        error: 'OpenAI API key is not set'
+      };
+    }
+    
     // Make a request to the API endpoint
     const response = await fetch('http://localhost:3003/api/analyze', {
       method: 'POST',
@@ -205,6 +214,12 @@ async function analyzeProperty(property, index) {
 // Function to run all tests and analyze results
 async function runTests() {
   console.log('Starting comprehensive tests of CRE Deal Finder scoring analysis...');
+  
+  // Check if API key is available
+  if (!API_KEY) {
+    console.error('Error: OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable in your .env file.');
+    console.error('Tests will continue but will likely fail without a valid API key.');
+  }
   
   // Start the Next.js server if it's not already running
   console.log('Ensure the Next.js server is running on port 3003 before continuing...');
