@@ -55,6 +55,13 @@ Price: ${property.price || 'N/A'}
 
 Description: ${sanitizedDescription}
 
+For each category (seller motivation, transaction complexity, property characteristics):
+1. Provide a score from 1-10 based on your analysis
+2. Write a detailed explanation of your reasoning
+3. List ONLY keywords that are truly relevant based on the actual content of the listing
+4. If no relevant keywords are found for a category, return an empty array []
+5. DO NOT include default or generic keywords that aren't supported by the listing content
+
 IMPORTANT: Provide your response as a valid JSON object with scores, explanations, and identified keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors.`
         }
       ],
@@ -173,6 +180,13 @@ Price: ${property.price || 'N/A'}
 
 Description: ${sanitizedDescription}
 
+For each category (seller motivation, transaction complexity, property characteristics):
+1. Provide a score from 1-10 based on your analysis
+2. Write a detailed explanation of your reasoning
+3. List ONLY keywords that are truly relevant based on the actual content of the listing
+4. If no relevant keywords are found for a category, return an empty array []
+5. DO NOT include default or generic keywords that aren't supported by the listing content
+
 IMPORTANT: Provide your response as a valid JSON object with scores, explanations, and identified keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors. The response must be valid JSON that can be parsed with JSON.parse().`
         }
       ],
@@ -273,6 +287,92 @@ IMPORTANT: Provide your response as a valid JSON object with scores, explanation
         };
       }
       
+      // Ensure we always return a consistent structure with the required properties
+      // This handles the case where parsedContent doesn't have the expected structure
+      if (!parsedContent.scores) {
+        // Try to extract scores from different possible formats
+        const sellerMotivationScore = parsedContent.seller_motivation_score || 
+                                     parsedContent.sellerMotivationScore || 
+                                     (parsedContent.seller_motivation && typeof parsedContent.seller_motivation === 'object' ? 
+                                      parsedContent.seller_motivation.score : parsedContent.seller_motivation) || 
+                                     0;
+        
+        const transactionComplexityScore = parsedContent.transaction_complexity_score || 
+                                          parsedContent.transactionComplexityScore || 
+                                          (parsedContent.transaction_complexity && typeof parsedContent.transaction_complexity === 'object' ? 
+                                           parsedContent.transaction_complexity.score : parsedContent.transaction_complexity) || 
+                                          0;
+        
+        const propertyCharacteristicsScore = parsedContent.property_characteristics_score || 
+                                            parsedContent.propertyCharacteristicsScore || 
+                                            (parsedContent.property_characteristics && typeof parsedContent.property_characteristics === 'object' ? 
+                                             parsedContent.property_characteristics.score : parsedContent.property_characteristics) || 
+                                            0;
+        
+        // Extract explanations if available
+        const sellerMotivationExplanation = parsedContent.seller_motivation_analysis?.explanation || 
+                                           (parsedContent.seller_motivation && typeof parsedContent.seller_motivation === 'object' ? 
+                                            parsedContent.seller_motivation.explanation : null) || 
+                                           "Based on the property listing, the seller motivation score reflects factors such as price reductions, urgency language, and market positioning.";
+        
+        const transactionComplexityExplanation = parsedContent.transaction_complexity_analysis?.explanation || 
+                                                (parsedContent.transaction_complexity && typeof parsedContent.transaction_complexity === 'object' ? 
+                                                 parsedContent.transaction_complexity.explanation : null) || 
+                                                "The transaction complexity score considers factors like property condition, tenant situation, financing requirements, and potential legal considerations.";
+        
+        const propertyCharacteristicsExplanation = parsedContent.property_characteristics_analysis?.explanation || 
+                                                  (parsedContent.property_characteristics && typeof parsedContent.property_characteristics === 'object' ? 
+                                                   parsedContent.property_characteristics.explanation : null) || 
+                                                  "The property characteristics score evaluates location quality, building condition, tenant mix, and potential for value-add improvements.";
+        
+        // Extract keywords if available
+        const sellerMotivationKeywords = parsedContent.seller_motivation_analysis?.keywords || 
+                                        (parsedContent.seller_motivation && typeof parsedContent.seller_motivation === 'object' ? 
+                                         parsedContent.seller_motivation.keywords : null) || 
+                                        [];
+        
+        const transactionComplexityKeywords = parsedContent.transaction_complexity_analysis?.keywords || 
+                                             (parsedContent.transaction_complexity && typeof parsedContent.transaction_complexity === 'object' ? 
+                                              parsedContent.transaction_complexity.keywords : null) || 
+                                             [];
+        
+        const propertyCharacteristicsKeywords = parsedContent.property_characteristics_analysis?.keywords || 
+                                               (parsedContent.property_characteristics && typeof parsedContent.property_characteristics === 'object' ? 
+                                                parsedContent.property_characteristics.keywords : null) || 
+                                               [];
+        
+        // Calculate total score if not provided
+        const totalScore = parsedContent.total_score || 
+                          parsedContent.totalScore || 
+                          parsedContent.totalWeightedScore || 
+                          ((sellerMotivationScore * 0.4) + (transactionComplexityScore * 0.2) + (propertyCharacteristicsScore * 0.4));
+        
+        return {
+          scores: {
+            sellerMotivation: {
+              score: sellerMotivationScore,
+              explanation: sellerMotivationExplanation,
+              keywords: sellerMotivationKeywords
+            },
+            transactionComplexity: {
+              score: transactionComplexityScore,
+              explanation: transactionComplexityExplanation,
+              keywords: transactionComplexityKeywords
+            },
+            propertyCharacteristics: {
+              score: propertyCharacteristicsScore,
+              explanation: propertyCharacteristicsExplanation,
+              keywords: propertyCharacteristicsKeywords
+            }
+          },
+          totalWeightedScore: parseFloat(totalScore.toFixed(1)),
+          summary: parsedContent.summary || parsedContent.analysis || "This property has been analyzed based on the provided information.",
+          model_used: "o1-mini",
+          models_attempted: ["o1", "o1-mini"]
+        };
+      }
+      
+      // If we already have a scores object with the expected structure, just add model info
       return {
         ...parsedContent,
         model_used: "o1-mini",
@@ -310,7 +410,16 @@ async function analyzeWithGPT(apiKey, property) {
       messages: [
         {
           role: "system",
-          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics. Your response must be in valid JSON format without any syntax errors.`
+          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics. 
+
+For each category, you must:
+1. Provide a score from 1-10 based on your analysis
+2. Write a detailed explanation of your reasoning
+3. List ONLY keywords that are truly relevant based on the actual content of the listing
+4. If no relevant keywords are found for a category, return an empty array []
+5. DO NOT include default or generic keywords that aren't supported by the listing content
+
+Your response must be in valid JSON format without any syntax errors.`
         },
         {
           role: "user",
@@ -321,7 +430,11 @@ Price: ${property.price || 'N/A'}
 
 Description: ${sanitizedDescription}
 
-Analyze this listing and provide scores from 1-10 for each category. Return the results as JSON with scores, explanations, and keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors.`
+Analyze this listing and provide scores from 1-10 for each category. Return the results as JSON with scores, explanations, and keywords. 
+
+IMPORTANT: Only include keywords that are actually relevant to the listing content. If you don't find relevant keywords for a category, return an empty array. Do not include generic keywords that aren't supported by the text.
+
+Ensure your response is properly formatted JSON without any unterminated strings or syntax errors.`
         }
       ],
       temperature: 0.1,
@@ -470,36 +583,133 @@ export default async function handler(req, res) {
         
         return res.status(200).json({
           scores: {
-            sellerMotivation: hasMotivatedSeller ? 8 : 5,
-            transactionComplexity: 6,
-            propertyCharacteristics: 7,
-            totalWeightedScore: hasMotivatedSeller ? 7 : 6
+            sellerMotivation: {
+              score: hasMotivatedSeller ? 8 : 5,
+              explanation: hasMotivatedSeller 
+                ? "The listing shows signs of a motivated seller based on key phrases in the description."
+                : "The listing doesn't show clear signs of seller motivation.",
+              keywords: []
+            },
+            transactionComplexity: {
+              score: 6,
+              explanation: "The transaction appears to have moderate complexity based on the available information.",
+              keywords: []
+            },
+            propertyCharacteristics: {
+              score: 7,
+              explanation: "The property shows potential based on the provided description.",
+              keywords: []
+            }
           },
-          analysis: {
-            sellerMotivationExplanation: hasMotivatedSeller 
-              ? "The listing shows signs of a motivated seller based on key phrases in the description."
-              : "The listing doesn't show clear signs of seller motivation.",
-            transactionComplexityExplanation: "The transaction appears to have moderate complexity based on the available information.",
-            propertyCharacteristicsExplanation: "The property shows potential based on the provided description."
-          },
+          totalWeightedScore: hasMotivatedSeller ? 7 : 6,
           model_used: "Fallback Analysis (Timeout)",
           models_attempted: ["Analysis timed out"]
         });
       }
       
-      // Return error details with status 500
-      const errorResponse = {
-        error: true,
-        message: "API Error - Debug Information",
-        error_details: error.toString(),
-        error_message: error.message,
-        models_attempted: modelsAttempted ? modelsAttempted.concat(["gpt-3.5-turbo"]) : ["o1", "o1-mini", "gpt-3.5-turbo"],
-        stack_trace: error.stack,
-        execution_time_ms: Date.now() - start
-      };
-      
-      console.log('Sending error response:', errorResponse.message);
-      return res.status(500).json(errorResponse);
+      // For authentication errors, return a fallback analysis with relevant keywords
+      if (error.code === 'invalid_api_key') {
+        console.log('Authentication error, returning fallback analysis with relevant keywords');
+        
+        // Check for keywords in the property description
+        const description = property.description || '';
+        
+        // Check for seller motivation keywords
+        const hasMotivatedSeller = /motivated seller|must sell|price reduced|urgent|quick sale|liquidation|distressed|bankruptcy|foreclosure|below market|owner retiring|relocating|estate sale/i.test(description);
+        const sellerMotivationKeywords = [];
+        if (/motivated seller/i.test(description)) sellerMotivationKeywords.push("motivated seller");
+        if (/must sell/i.test(description)) sellerMotivationKeywords.push("must sell");
+        if (/price reduced/i.test(description)) sellerMotivationKeywords.push("price reduced");
+        if (/urgent/i.test(description)) sellerMotivationKeywords.push("urgent");
+        if (/quick sale/i.test(description)) sellerMotivationKeywords.push("quick sale");
+        if (/liquidation/i.test(description)) sellerMotivationKeywords.push("liquidation");
+        if (/distressed/i.test(description)) sellerMotivationKeywords.push("distressed");
+        if (/bankruptcy/i.test(description)) sellerMotivationKeywords.push("bankruptcy");
+        if (/foreclosure/i.test(description)) sellerMotivationKeywords.push("foreclosure");
+        if (/below market/i.test(description)) sellerMotivationKeywords.push("below market");
+        if (/owner retiring/i.test(description)) sellerMotivationKeywords.push("owner retiring");
+        if (/relocating/i.test(description)) sellerMotivationKeywords.push("relocating");
+        if (/estate sale/i.test(description)) sellerMotivationKeywords.push("estate sale");
+        
+        // Check for transaction complexity keywords
+        const transactionComplexityKeywords = [];
+        if (/foreclosure/i.test(description)) transactionComplexityKeywords.push("foreclosure");
+        if (/bankruptcy/i.test(description)) transactionComplexityKeywords.push("bankruptcy");
+        if (/short sale/i.test(description)) transactionComplexityKeywords.push("short sale");
+        if (/legal issues/i.test(description)) transactionComplexityKeywords.push("legal issues");
+        if (/title issues/i.test(description)) transactionComplexityKeywords.push("title issues");
+        if (/tax sale/i.test(description)) transactionComplexityKeywords.push("tax sale");
+        if (/auction/i.test(description)) transactionComplexityKeywords.push("auction");
+        if (/portfolio/i.test(description)) transactionComplexityKeywords.push("portfolio");
+        if (/multiple parcels/i.test(description)) transactionComplexityKeywords.push("multiple parcels");
+        if (/complex/i.test(description)) transactionComplexityKeywords.push("complex");
+        if (/special purpose/i.test(description)) transactionComplexityKeywords.push("special purpose");
+        if (/encumbrance/i.test(description)) transactionComplexityKeywords.push("encumbrance");
+        if (/lease restrictions/i.test(description)) transactionComplexityKeywords.push("lease restrictions");
+        if (/environmental/i.test(description)) transactionComplexityKeywords.push("environmental");
+        if (/double net lease|nn lease|triple net lease|nnn lease/i.test(description)) transactionComplexityKeywords.push("net lease");
+        
+        // Check for property characteristics keywords
+        const propertyCharacteristicsKeywords = [];
+        if (/below market/i.test(description)) propertyCharacteristicsKeywords.push("below market");
+        if (/value[- ]add/i.test(description)) propertyCharacteristicsKeywords.push("value-add");
+        if (/upside/i.test(description)) propertyCharacteristicsKeywords.push("upside potential");
+        if (/fixer upper/i.test(description)) propertyCharacteristicsKeywords.push("fixer upper");
+        if (/vacant/i.test(description)) propertyCharacteristicsKeywords.push("vacant");
+        if (/deferred maintenance/i.test(description)) propertyCharacteristicsKeywords.push("deferred maintenance");
+        if (/renovation/i.test(description)) propertyCharacteristicsKeywords.push("renovation");
+        if (/redevelopment/i.test(description)) propertyCharacteristicsKeywords.push("redevelopment");
+        if (/reposition/i.test(description)) propertyCharacteristicsKeywords.push("reposition");
+        if (/class b/i.test(description)) propertyCharacteristicsKeywords.push("class b");
+        if (/class c/i.test(description)) propertyCharacteristicsKeywords.push("class c");
+        if (/distressed/i.test(description)) propertyCharacteristicsKeywords.push("distressed");
+        if (/underperforming/i.test(description)) propertyCharacteristicsKeywords.push("underperforming");
+        if (/outdated/i.test(description)) propertyCharacteristicsKeywords.push("outdated");
+        if (/high vacancy/i.test(description)) propertyCharacteristicsKeywords.push("high vacancy");
+        if (/mismanaged/i.test(description)) propertyCharacteristicsKeywords.push("mismanaged");
+        if (/national tenant/i.test(description)) propertyCharacteristicsKeywords.push("national tenant");
+        if (/long-term lease/i.test(description)) propertyCharacteristicsKeywords.push("long-term lease");
+        
+        // Create a response with relevant keywords
+        return res.status(200).json({
+          scores: {
+            sellerMotivation: {
+              score: hasMotivatedSeller ? 8 : 5,
+              explanation: hasMotivatedSeller 
+                ? "The listing shows clear signs of a motivated seller based on key phrases in the description."
+                : "Based on the property listing, there are no clear indicators of seller motivation.",
+              keywords: sellerMotivationKeywords
+            },
+            transactionComplexity: {
+              score: 6,
+              explanation: "The transaction complexity score considers factors like property condition, tenant situation, and lease terms.",
+              keywords: transactionComplexityKeywords.length > 0 ? transactionComplexityKeywords : []
+            },
+            propertyCharacteristics: {
+              score: 7,
+              explanation: "The property characteristics score evaluates location quality, building condition, and potential for value-add improvements.",
+              keywords: propertyCharacteristicsKeywords.length > 0 ? propertyCharacteristicsKeywords : []
+            }
+          },
+          totalWeightedScore: hasMotivatedSeller ? 7 : 6,
+          model_used: "Fallback Analysis (API Error)",
+          models_attempted: ["o1", "o1-mini", "gpt-3.5-turbo"]
+        });
+      } else {
+        // Return error details with status 500 for other errors
+        const errorResponse = {
+          error: true,
+          message: "API Error - Debug Information",
+          error_details: error.toString(),
+          error_message: error.message,
+          models_attempted: ["o1", "o1-mini", "gpt-3.5-turbo"],
+          stack_trace: error.stack,
+          execution_time_ms: Date.now() - start
+        };
+        
+        console.log('Sending error response:', errorResponse.message);
+        return res.status(500).json(errorResponse);
+      }
     }
   } catch (globalError) {
     // Global error handler as a safety net

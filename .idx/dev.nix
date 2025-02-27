@@ -19,6 +19,9 @@
     pkgs.python311Packages.python-dotenv
     pkgs.python311Packages.openai
     pkgs.python311Packages.streamlit
+    pkgs.python311Packages.pandas
+    pkgs.python311Packages.numpy
+    pkgs.python311Packages.requests
     
     # Node.js for Next.js frontend
     pkgs.nodejs_20
@@ -30,6 +33,12 @@
     pkgs.ripgrep  # Better grep
     pkgs.fd       # Better find
     pkgs.htop     # Process viewer
+    pkgs.wget     # For downloading files
+    pkgs.gnused   # For text processing
+    
+    # Web search tools
+    pkgs.w3m      # Text-based web browser
+    pkgs.lynx     # Another text-based web browser
   ];
 
   # Sets environment variables in the workspace
@@ -42,6 +51,9 @@
     
     # Node.js settings
     NODE_ENV = "development";
+    
+    # Search settings
+    BROWSER = "w3m";
   };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
@@ -65,6 +77,11 @@
       
       # YAML support for configuration files
       "redhat.vscode-yaml"
+      
+      # Additional useful extensions
+      "ms-azuretools.vscode-docker"
+      "ritwickdey.liveserver"
+      "christian-kohler.path-intellisense"
     ];
 
     # Enable previews
@@ -72,20 +89,52 @@
       enable = true;
       previews = {
         # Next.js frontend preview
-        next-app = {
-          command = ["bash" "-c" "cd next-app && npm run dev"];
+        web = {
+          command = [
+            "npm"
+            "run"
+            "dev"
+            "--"
+            "--port"
+            "$PORT"
+            "--host"
+            "0.0.0.0"
+          ];
+          cwd = "next-app";
+          manager = "web";
+          env = {
+            PORT = "$PORT";
+            NEXT_TELEMETRY_DISABLED = "1";
+          };
+        };
+        
+        # Streamlit app preview
+        streamlit-web = {
+          command = [
+            "streamlit"
+            "run"
+            "app.py"
+            "--server.port"
+            "$PORT"
+            "--server.address"
+            "0.0.0.0"
+          ];
           manager = "web";
           env = {
             PORT = "$PORT";
           };
         };
         
-        # Streamlit app preview (if you use it)
-        streamlit = {
-          command = ["bash" "-c" "streamlit run app.py"];
+        # Python API preview
+        api = {
+          command = [
+            "python"
+            "main.py"
+          ];
           manager = "web";
           env = {
             PORT = "$PORT";
+            PYTHONUNBUFFERED = "1";
           };
         };
       };
@@ -103,13 +152,38 @@
         
         # Create necessary directories
         create-dirs = "mkdir -p logs output";
+        
+        # Setup Python virtual environment (alternative to system packages)
+        setup-venv = "python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt";
       };
       
       # Runs when the workspace is (re)started
       onStart = {
         # Check Python and Node.js versions
         check-versions = "echo 'Python:' && python --version && echo 'Node:' && node --version && echo 'NPM:' && npm --version";
+        
+        # Activate virtual environment if it exists
+        activate-venv = "if [ -d '.venv' ]; then source .venv/bin/activate; fi";
+        
+        # Check for updates to dependencies
+        check-updates = "echo 'Checking for updates...' && cd next-app && npm outdated || true";
       };
     };
+  };
+  
+  # Enable services
+  services = {
+    # Enable PostgreSQL if needed
+    # postgres = {
+    #   enable = true;
+    #   listen_addresses = "127.0.0.1";
+    #   port = 5432;
+    # };
+    
+    # Enable Redis if needed
+    # redis = {
+    #   enable = true;
+    #   port = 6379;
+    # };
   };
 }

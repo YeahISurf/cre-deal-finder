@@ -8,7 +8,7 @@ SyntaxHighlighter.registerLanguage('json', json);
 
 // Helper function to extract keywords from text
 function extractKeywordsFromText(text) {
-  if (!text) return null;
+  if (!text) return [];
   
   // Common keywords to look for in real estate listings
   const keywordPatterns = [
@@ -51,7 +51,7 @@ function extractKeywordsFromText(text) {
     }
   });
   
-  return foundKeywords.length > 0 ? foundKeywords : null;
+  return foundKeywords;
 }
 
 function ScoreCard({ title, score = 0, className }) {
@@ -89,7 +89,7 @@ function ExpandableSection({ title, content, keywords = [] }) {
         <div className="p-3 sm:p-5">
           <p className="text-gray-700 mb-4 leading-relaxed">{content}</p>
           
-          {keywords.length > 0 && (
+          {keywords && keywords.length > 0 ? (
             <div>
               <h4 className="font-medium text-gray-800 mb-2">Keywords Detected:</h4>
               <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
@@ -102,6 +102,10 @@ function ExpandableSection({ title, content, keywords = [] }) {
                   </span>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="text-gray-500 italic">
+              No relevant keywords detected for this category.
             </div>
           )}
         </div>
@@ -190,118 +194,100 @@ export default function AnalysisResults({ results }) {
                                  explanation: rawAnalysis.scores.sellerMotivation.explanation,
                                  keywords: rawAnalysis.scores.sellerMotivation.keywords || 
                                           (rawAnalysis.keywords && rawAnalysis.keywords.sellerMotivation) || 
-                                          extractKeywordsFromText(rawAnalysis.scores.sellerMotivation.explanation) || 
-                                          ["motivated seller", "price reduced", "must sell", "urgent sale"]
+                                          extractKeywordsFromText(rawAnalysis.scores.sellerMotivation.explanation)
                                }) ||
                                (rawAnalysis.scores && rawAnalysis.scores.seller_motivation && {
                                  explanation: rawAnalysis.scores.seller_motivation.explanation,
                                  keywords: rawAnalysis.scores.seller_motivation.keywords || 
                                           (rawAnalysis.keywords && rawAnalysis.keywords.seller_motivation) || 
-                                          extractKeywordsFromText(rawAnalysis.scores.seller_motivation.explanation) || 
-                                          ["motivated seller", "price reduced", "must sell", "urgent sale"]
+                                          extractKeywordsFromText(rawAnalysis.scores.seller_motivation.explanation)
                                }) ||
                                (rawAnalysis.explanations && { 
                                  explanation: rawAnalysis.explanations.seller_motivation,
                                  keywords: (rawAnalysis.keywords && rawAnalysis.keywords.seller_motivation) || 
-                                          extractKeywordsFromText(rawAnalysis.explanations.seller_motivation) || 
-                                          ["motivated seller", "price reduced", "must sell", "urgent sale"]
+                                          extractKeywordsFromText(rawAnalysis.explanations.seller_motivation)
                                }) ||
                                (rawAnalysis.analysis && typeof rawAnalysis.analysis === 'object' && {
                                  explanation: rawAnalysis.analysis.sellerMotivationExplanation,
                                  keywords: (rawAnalysis.keywords && rawAnalysis.keywords.sellerMotivation) || 
-                                          extractKeywordsFromText(rawAnalysis.analysis.sellerMotivationExplanation) || 
-                                          ["motivated seller", "price reduced", "must sell", "urgent sale"]
+                                          extractKeywordsFromText(rawAnalysis.analysis.sellerMotivationExplanation)
                                }) ||
                                (extractedExplanations && {
                                  explanation: extractedExplanations.sellerMotivation || 
                                              "Seller Motivation: " + extractedExplanations.fallback,
-                                 keywords: extractKeywordsFromText(extractedExplanations.sellerMotivation || extractedExplanations.fallback) || 
-                                          ["motivated seller", "price reduced", "must sell", "urgent sale"]
+                                 keywords: extractKeywordsFromText(extractedExplanations.sellerMotivation || extractedExplanations.fallback)
                                }) ||
                                (rawAnalysis.seller_motivation && {
                                  explanation: rawAnalysis.seller_motivation.explanation,
                                  keywords: rawAnalysis.seller_motivation.keywords || 
-                                          extractKeywordsFromText(rawAnalysis.seller_motivation.explanation) || 
-                                          ["motivated seller", "price reduced", "must sell", "urgent sale"]
-                               }),
+                                          extractKeywordsFromText(rawAnalysis.seller_motivation.explanation)
+                               }) || { explanation: "No seller motivation detected in this listing.", keywords: [] },
     transaction_complexity_analysis: rawAnalysis.transaction_complexity_analysis || 
                                     (rawAnalysis.scores && rawAnalysis.scores.transactionComplexity && {
                                       explanation: rawAnalysis.scores.transactionComplexity.explanation,
                                       keywords: rawAnalysis.scores.transactionComplexity.keywords || 
                                                (rawAnalysis.keywords && rawAnalysis.keywords.transactionComplexity) || 
-                                               extractKeywordsFromText(rawAnalysis.scores.transactionComplexity.explanation) || 
-                                               ["deferred maintenance", "below market", "complex deal", "legal issues"]
+                                               extractKeywordsFromText(rawAnalysis.scores.transactionComplexity.explanation)
                                     }) ||
                                     (rawAnalysis.scores && rawAnalysis.scores.transaction_complexity && {
                                       explanation: rawAnalysis.scores.transaction_complexity.explanation,
                                       keywords: rawAnalysis.scores.transaction_complexity.keywords || 
                                                (rawAnalysis.keywords && rawAnalysis.keywords.transaction_complexity) || 
-                                               extractKeywordsFromText(rawAnalysis.scores.transaction_complexity.explanation) || 
-                                               ["deferred maintenance", "below market", "complex deal", "legal issues"]
+                                               extractKeywordsFromText(rawAnalysis.scores.transaction_complexity.explanation)
                                     }) ||
                                     (rawAnalysis.explanations && {
                                       explanation: rawAnalysis.explanations.transaction_complexity,
                                       keywords: (rawAnalysis.keywords && rawAnalysis.keywords.transaction_complexity) || 
-                                               extractKeywordsFromText(rawAnalysis.explanations.transaction_complexity) || 
-                                               ["deferred maintenance", "below market", "complex deal", "legal issues"]
+                                               extractKeywordsFromText(rawAnalysis.explanations.transaction_complexity)
                                     }) ||
                                     (rawAnalysis.analysis && typeof rawAnalysis.analysis === 'object' && {
                                       explanation: rawAnalysis.analysis.transactionComplexityExplanation,
                                       keywords: (rawAnalysis.keywords && rawAnalysis.keywords.transactionComplexity) || 
-                                               extractKeywordsFromText(rawAnalysis.analysis.transactionComplexityExplanation) || 
-                                               ["deferred maintenance", "below market", "complex deal", "legal issues"]
+                                               extractKeywordsFromText(rawAnalysis.analysis.transactionComplexityExplanation)
                                     }) ||
                                     (extractedExplanations && {
                                       explanation: extractedExplanations.transactionComplexity || 
                                                   "Transaction Complexity: " + extractedExplanations.fallback,
-                                      keywords: extractKeywordsFromText(extractedExplanations.transactionComplexity || extractedExplanations.fallback) || 
-                                               ["deferred maintenance", "below market", "complex deal", "legal issues"]
+                                      keywords: extractKeywordsFromText(extractedExplanations.transactionComplexity || extractedExplanations.fallback)
                                     }) ||
                                     (rawAnalysis.transaction_complexity && {
                                       explanation: rawAnalysis.transaction_complexity.explanation,
                                       keywords: rawAnalysis.transaction_complexity.keywords || 
-                                               extractKeywordsFromText(rawAnalysis.transaction_complexity.explanation) || 
-                                               ["deferred maintenance", "below market", "complex deal", "legal issues"]
-                                    }),
+                                               extractKeywordsFromText(rawAnalysis.transaction_complexity.explanation)
+                                    }) || { explanation: "No transaction complexity factors detected in this listing.", keywords: [] },
     property_characteristics_analysis: rawAnalysis.property_characteristics_analysis || 
                                       (rawAnalysis.scores && rawAnalysis.scores.propertyCharacteristics && {
                                         explanation: rawAnalysis.scores.propertyCharacteristics.explanation,
                                         keywords: rawAnalysis.scores.propertyCharacteristics.keywords || 
                                                  (rawAnalysis.keywords && rawAnalysis.keywords.propertyCharacteristics) || 
-                                                 extractKeywordsFromText(rawAnalysis.scores.propertyCharacteristics.explanation) || 
-                                                 ["value-add", "below market rents", "good location", "upside potential"]
+                                                 extractKeywordsFromText(rawAnalysis.scores.propertyCharacteristics.explanation)
                                       }) ||
                                       (rawAnalysis.scores && rawAnalysis.scores.property_characteristics && {
                                         explanation: rawAnalysis.scores.property_characteristics.explanation,
                                         keywords: rawAnalysis.scores.property_characteristics.keywords || 
                                                  (rawAnalysis.keywords && rawAnalysis.keywords.property_characteristics) || 
-                                                 extractKeywordsFromText(rawAnalysis.scores.property_characteristics.explanation) || 
-                                                 ["value-add", "below market rents", "good location", "upside potential"]
+                                                 extractKeywordsFromText(rawAnalysis.scores.property_characteristics.explanation)
                                       }) ||
                                       (rawAnalysis.explanations && {
                                         explanation: rawAnalysis.explanations.property_characteristics,
                                         keywords: (rawAnalysis.keywords && rawAnalysis.keywords.property_characteristics) || 
-                                                 extractKeywordsFromText(rawAnalysis.explanations.property_characteristics) || 
-                                                 ["value-add", "below market rents", "good location", "upside potential"]
+                                                 extractKeywordsFromText(rawAnalysis.explanations.property_characteristics)
                                       }) ||
                                       (rawAnalysis.analysis && typeof rawAnalysis.analysis === 'object' && {
                                         explanation: rawAnalysis.analysis.propertyCharacteristicsExplanation,
                                         keywords: (rawAnalysis.keywords && rawAnalysis.keywords.propertyCharacteristics) || 
-                                                 extractKeywordsFromText(rawAnalysis.analysis.propertyCharacteristicsExplanation) || 
-                                                 ["value-add", "below market rents", "good location", "upside potential"]
+                                                 extractKeywordsFromText(rawAnalysis.analysis.propertyCharacteristicsExplanation)
                                       }) ||
                                       (extractedExplanations && {
                                         explanation: extractedExplanations.propertyCharacteristics || 
                                                     "Property Characteristics: " + extractedExplanations.fallback,
-                                        keywords: extractKeywordsFromText(extractedExplanations.propertyCharacteristics || extractedExplanations.fallback) || 
-                                                 ["value-add", "below market rents", "good location", "upside potential"]
+                                        keywords: extractKeywordsFromText(extractedExplanations.propertyCharacteristics || extractedExplanations.fallback)
                                       }) ||
                                       (rawAnalysis.property_characteristics && {
                                         explanation: rawAnalysis.property_characteristics.explanation,
                                         keywords: rawAnalysis.property_characteristics.keywords || 
-                                                 extractKeywordsFromText(rawAnalysis.property_characteristics.explanation) || 
-                                                 ["value-add", "below market rents", "good location", "upside potential"]
-                                      }),
+                                                 extractKeywordsFromText(rawAnalysis.property_characteristics.explanation)
+                                      }) || { explanation: "No specific property characteristics detected in this listing.", keywords: [] },
     
     // Handle summary
     summary: rawAnalysis.summary || 
