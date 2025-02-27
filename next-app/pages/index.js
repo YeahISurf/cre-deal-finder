@@ -124,6 +124,32 @@ export default function Home() {
 
       // If we got this far, we have valid JSON data
       console.log(`Request completed in ${Date.now() - start}ms`);
+      
+      // Calculate total score if not provided
+      if (!data.total_score && !data.scores?.totalWeightedScore && !data.scores?.total_weighted_score) {
+        // Extract scores from different possible formats
+        const sellerScore = data.seller_motivation_score || 
+                           (data.scores && data.scores.sellerMotivation) || 
+                           (data.scores && data.scores.seller_motivation) ||
+                           (data.seller_motivation && data.seller_motivation.score) || 0;
+        
+        const complexityScore = data.transaction_complexity_score || 
+                               (data.scores && data.scores.transactionComplexity) || 
+                               (data.scores && data.scores.transaction_complexity) ||
+                               (data.transaction_complexity && data.transaction_complexity.score) || 0;
+        
+        const propertyScore = data.property_characteristics_score || 
+                             (data.scores && data.scores.propertyCharacteristics) || 
+                             (data.scores && data.scores.property_characteristics) ||
+                             (data.property_characteristics && data.property_characteristics.score) || 0;
+        
+        // Calculate weighted average (40% seller, 20% complexity, 40% property)
+        const totalScore = (sellerScore * 0.4) + (complexityScore * 0.2) + (propertyScore * 0.4);
+        
+        // Add total score to data
+        data.total_score = parseFloat(totalScore.toFixed(1));
+      }
+      
       setResults({
         ...data,
         property: propertyData

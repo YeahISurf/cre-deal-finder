@@ -80,6 +80,49 @@ IMPORTANT: Provide your response as a valid JSON object with scores, explanation
       cleanContent = cleanContent.replace(/"\s*\n\s*"/g, '",\n"');
       cleanContent = cleanContent.replace(/}\s*\n\s*"/g, '},\n"');
       cleanContent = cleanContent.replace(/}\s*\n\s*{/g, '},\n{');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*"/g, '$1,\n"');
+      
+      // Fix missing commas between properties (seen in o1 model responses)
+      cleanContent = cleanContent.replace(/(\w+)"?\s*\n\s*"/g, '$1",\n"');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*}/g, '$1\n}');
+      
+      // Additional fixes for common JSON formatting issues in AI responses
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*"/g, '$1,\n"');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*\{/g, '$1,\n{');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*\[/g, '$1,\n[');
+      cleanContent = cleanContent.replace(/"\s*\n\s*\{/g, '",\n{');
+      cleanContent = cleanContent.replace(/"\s*\n\s*\[/g, '",\n[');
+      cleanContent = cleanContent.replace(/}\s*\n\s*\{/g, '},\n{');
+      cleanContent = cleanContent.replace(/]\s*\n\s*\{/g, '],\n{');
+      cleanContent = cleanContent.replace(/}\s*\n\s*\[/g, '},\n[');
+      cleanContent = cleanContent.replace(/]\s*\n\s*\[/g, '],\n[');
+      
+      // Fix missing commas after property names (common in o1-mini responses)
+      cleanContent = cleanContent.replace(/"(\w+)"\s*\n\s*([^,\s])/g, '"$1",\n$2');
+      
+      // Fix missing commas after numeric values
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*([^,\s}])/g, '$1,\n$2');
+      
+      // Fix missing commas between properties (seen in o1 model responses)
+      cleanContent = cleanContent.replace(/(\w+)"?\s*\n\s*"/g, '$1",\n"');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*}/g, '$1\n}');
+      
+      // Additional fixes for common JSON formatting issues in AI responses
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*"/g, '$1,\n"');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*\{/g, '$1,\n{');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*\[/g, '$1,\n[');
+      cleanContent = cleanContent.replace(/"\s*\n\s*\{/g, '",\n{');
+      cleanContent = cleanContent.replace(/"\s*\n\s*\[/g, '",\n[');
+      cleanContent = cleanContent.replace(/}\s*\n\s*\{/g, '},\n{');
+      cleanContent = cleanContent.replace(/]\s*\n\s*\{/g, '],\n{');
+      cleanContent = cleanContent.replace(/}\s*\n\s*\[/g, '},\n[');
+      cleanContent = cleanContent.replace(/]\s*\n\s*\[/g, '],\n[');
+      
+      // Fix missing commas after property names (common in o1-mini responses)
+      cleanContent = cleanContent.replace(/"(\w+)"\s*\n\s*([^,\s])/g, '"$1",\n$2');
+      
+      // Fix missing commas after numeric values
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*([^,\s}])/g, '$1,\n$2');
       
       // Parse the cleaned JSON response
       const parsedContent = JSON.parse(cleanContent);
@@ -159,6 +202,77 @@ IMPORTANT: Provide your response as a valid JSON object with scores, explanation
       
       // Parse the cleaned JSON response
       const parsedContent = JSON.parse(cleanContent);
+      
+      // If the response has scores but no explanations, add explanations from the analysis field
+      if (parsedContent.scores && parsedContent.analysis && typeof parsedContent.analysis === 'string') {
+        // Extract the full analysis string
+        const analysisText = parsedContent.analysis;
+        
+        // Try to extract explanations for each category from the analysis string
+        const sellerMotivationMatch = analysisText.match(/seller motivation[:\.]?\s*([^\.]+\.)/i) || 
+                                     analysisText.match(/motivation[:\.]?\s*([^\.]+\.)/i);
+        const transactionComplexityMatch = analysisText.match(/transaction complexity[:\.]?\s*([^\.]+\.)/i) || 
+                                          analysisText.match(/complexity[:\.]?\s*([^\.]+\.)/i);
+        const propertyCharacteristicsMatch = analysisText.match(/property characteristics[:\.]?\s*([^\.]+\.)/i) || 
+                                            analysisText.match(/characteristics[:\.]?\s*([^\.]+\.)/i);
+        
+        // Create a structured response with the analysis text
+        return {
+          scores: {
+            sellerMotivation: {
+              score: parsedContent.scores.sellerMotivation || 0,
+              explanation: sellerMotivationMatch 
+                ? sellerMotivationMatch[1].trim() 
+                : "The seller motivation score reflects factors such as price reductions, urgency language, and market positioning. " + analysisText.substring(0, 100) + "..."
+            },
+            transactionComplexity: {
+              score: parsedContent.scores.transactionComplexity || 0,
+              explanation: transactionComplexityMatch 
+                ? transactionComplexityMatch[1].trim() 
+                : "The transaction complexity score considers factors like property condition, tenant situation, and potential legal considerations. " + analysisText.substring(0, 100) + "..."
+            },
+            propertyCharacteristics: {
+              score: parsedContent.scores.propertyCharacteristics || 0,
+              explanation: propertyCharacteristicsMatch 
+                ? propertyCharacteristicsMatch[1].trim() 
+                : "The property characteristics score evaluates location quality, building condition, and potential for value-add improvements. " + analysisText.substring(0, 100) + "..."
+            }
+          },
+          totalWeightedScore: parsedContent.totalWeightedScore || parsedContent.weightedScore || 0,
+          analysis: analysisText,
+          model_used: "o1-mini",
+          models_attempted: ["o1", "o1-mini"]
+        };
+      }
+      
+      // If we have scores but no explanations at all, create default explanations
+      if (parsedContent.scores && 
+          (!parsedContent.scores.sellerMotivation?.explanation && 
+           !parsedContent.scores.transactionComplexity?.explanation && 
+           !parsedContent.scores.propertyCharacteristics?.explanation)) {
+        
+        // Create a structured response with default explanations
+        return {
+          scores: {
+            sellerMotivation: {
+              score: parsedContent.scores.sellerMotivation || 0,
+              explanation: "Based on the property listing, the seller motivation score reflects factors such as price reductions, urgency language, and market positioning."
+            },
+            transactionComplexity: {
+              score: parsedContent.scores.transactionComplexity || 0,
+              explanation: "The transaction complexity score considers factors like property condition, tenant situation, financing requirements, and potential legal considerations."
+            },
+            propertyCharacteristics: {
+              score: parsedContent.scores.propertyCharacteristics || 0,
+              explanation: "The property characteristics score evaluates location quality, building condition, tenant mix, and potential for value-add improvements."
+            }
+          },
+          totalWeightedScore: parsedContent.totalWeightedScore || parsedContent.weightedScore || 0,
+          model_used: "o1-mini",
+          models_attempted: ["o1", "o1-mini"]
+        };
+      }
+      
       return {
         ...parsedContent,
         model_used: "o1-mini",
@@ -260,7 +374,7 @@ export default async function handler(req, res) {
 
   // Set a timeout to ensure we respond within Vercel's function timeout limit
   // This will return a fallback response if the analysis takes too long
-  const TIMEOUT_MS = 9000; // 9 seconds (Vercel has a 10s limit on free tier)
+  const TIMEOUT_MS = 55000; // 55 seconds (Vercel now has a 60s limit)
   let timeoutId;
   
   const timeoutPromise = new Promise((_, reject) => {
@@ -295,22 +409,55 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Property description is required' });
     }
     
-    // Use GPT-3.5-Turbo directly for faster response times on Vercel
-    // This avoids the cascading fallback that can lead to timeouts
+    // Implement model cascade: try o1 first, then o1-mini, then GPT-3.5-Turbo
     try {
       // Race between the analysis and the timeout
-      const result = await Promise.race([
-        analyzeWithGPT(apiKey, property),
-        timeoutPromise
-      ]);
+      let result;
+      let modelsAttempted = [];
       
-      clearTimeout(timeoutId);
-      console.log('Analysis succeeded, sending response');
-      console.log(`Execution time: ${Date.now() - start}ms`);
-      return res.status(200).json(result);
+      // Try o1 model first
+      try {
+        console.log('Attempting analysis with o1 model');
+        result = await analyzeWithO1(apiKey, property);
+        clearTimeout(timeoutId);
+        console.log('o1 analysis succeeded, sending response');
+        console.log(`Execution time: ${Date.now() - start}ms`);
+        return res.status(200).json(result);
+      } catch (o1Error) {
+        console.error('o1 model failed, falling back to o1-mini:', o1Error.message);
+        modelsAttempted.push("o1");
+        
+        // Try o1-mini model next
+        try {
+          console.log('Attempting analysis with o1-mini model');
+          result = await analyzeWithO1Mini(apiKey, property);
+          clearTimeout(timeoutId);
+          console.log('o1-mini analysis succeeded, sending response');
+          console.log(`Execution time: ${Date.now() - start}ms`);
+          return res.status(200).json(result);
+        } catch (o1MiniError) {
+          console.error('o1-mini model failed, falling back to GPT-3.5-Turbo:', o1MiniError.message);
+          modelsAttempted.push("o1-mini");
+          
+          // Finally try GPT-3.5-Turbo
+          console.log('Attempting analysis with GPT-3.5-Turbo model');
+          result = await Promise.race([
+            analyzeWithGPT(apiKey, property),
+            timeoutPromise
+          ]);
+          
+          // Update models attempted in the result
+          result.models_attempted = modelsAttempted.concat(["gpt-3.5-turbo"]);
+          
+          clearTimeout(timeoutId);
+          console.log('GPT-3.5-Turbo analysis succeeded, sending response');
+          console.log(`Execution time: ${Date.now() - start}ms`);
+          return res.status(200).json(result);
+        }
+      }
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error('Analysis error:', error);
+      console.error('All models failed, analysis error:', error);
       
       // If we hit our internal timeout, return a simplified fallback response
       if (error.message === 'FUNCTION_TIMEOUT') {
@@ -346,7 +493,7 @@ export default async function handler(req, res) {
         message: "API Error - Debug Information",
         error_details: error.toString(),
         error_message: error.message,
-        models_attempted: ["gpt-3.5-turbo"],
+        models_attempted: modelsAttempted ? modelsAttempted.concat(["gpt-3.5-turbo"]) : ["o1", "o1-mini", "gpt-3.5-turbo"],
         stack_trace: error.stack,
         execution_time_ms: Date.now() - start
       };
