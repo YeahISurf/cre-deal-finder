@@ -1,4 +1,4 @@
-ine# PFISH LOBSTER COIN CRE Deal Finder v1.3.0
+ine# PFISH CRE AI DEAL FINDER
 
 ![Project Status](https://img.shields.io/badge/status-beta-yellow)
 ![Version](https://img.shields.io/badge/version-1.3.0-blue)

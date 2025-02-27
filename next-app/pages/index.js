@@ -165,34 +165,35 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <Head>
-        <title>PFISH LOBSTER COIN CRE Deal Finder</title>
+        <title>PFISH CRE AI DEAL FINDER</title>
         <meta name="description" content="AI-powered commercial real estate deal finder" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className="container mx-auto px-4 py-12">
-        <div className="flex items-center justify-center mb-8">
-          <div className="bg-gradient-to-r from-primary-600 to-primary-500 p-3 rounded-2xl shadow-md mr-3">
+        <div className="flex flex-col sm:flex-row items-center justify-center mb-8 text-center">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-500 p-3 rounded-2xl shadow-md mr-0 sm:mr-3 mb-3 sm:mb-0">
             <BuildingOfficeIcon className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-semibold text-gray-900">PFISH LOBSTER COIN CRE</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900">PFISH CRE AI DEAL FINDER</h1>
         </div>
         
-        <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto text-lg">
+        <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto text-base sm:text-lg px-2">
           Premium AI-powered analysis of commercial real estate listings to identify investment opportunities
           based on seller motivation, transaction complexity, and property characteristics.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           <div className="card">
-            <h2 className="text-2xl font-medium mb-6 text-gray-900">Property Analysis</h2>
+            <h2 className="text-xl sm:text-2xl font-medium mb-6 text-gray-900">Property Analysis</h2>
             
             <div className="mb-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
                 <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-2">
                   OpenAI API Key
                 </label>
-                <div className="flex items-center">
+                <div className="flex items-center mt-2 sm:mt-0">
                   <label htmlFor="skipAPI" className="block text-sm font-medium text-gray-700 mr-2">
                     Use Sample Analysis
                   </label>
@@ -266,8 +267,8 @@ export default function Home() {
             )}
           </div>
 
-          <div className="card overflow-auto subtle-scroll max-h-[800px]">
-            <h2 className="text-2xl font-medium mb-6 text-gray-900 sticky top-0 bg-white pt-1 pb-4 z-10">Analysis Results</h2>
+          <div className="card overflow-auto subtle-scroll max-h-[600px] md:max-h-[800px]">
+            <h2 className="text-xl sm:text-2xl font-medium mb-6 text-gray-900 sticky top-0 bg-white pt-1 pb-4 z-10">Analysis Results</h2>
             
             {isAnalyzing ? (
               <div className="flex flex-col items-center justify-center h-[500px]">
@@ -303,7 +304,7 @@ export default function Home() {
 
       <footer className="mt-16 py-8 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-500">PFISH LOBSTER COIN CRE Deal Finder &copy; {new Date().getFullYear()}</p>
+          <p className="text-gray-500">PFISH CRE AI DEAL FINDER &copy; {new Date().getFullYear()}</p>
           <p className="mt-2 text-sm text-gray-400">Powered by OpenAI and Next.js</p>
         </div>
       </footer>

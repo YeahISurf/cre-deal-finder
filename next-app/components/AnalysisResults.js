@@ -13,8 +13,8 @@ function ScoreCard({ title, score = 0, className }) {
   
   return (
     <div className={`score-card ${scoreClass} ${className}`}>
-      <h3 className="text-lg font-medium mb-1">{title}</h3>
-      <p className="text-4xl font-semibold">{safeScore.toFixed(1)}</p>
+      <h3 className="text-sm sm:text-lg font-medium mb-1">{title}</h3>
+      <p className="text-3xl sm:text-4xl font-semibold">{safeScore.toFixed(1)}</p>
       <p className="text-xs mt-1 text-gray-500 font-medium">out of 10</p>
     </div>
   );
@@ -26,10 +26,10 @@ function ExpandableSection({ title, content, keywords = [] }) {
   return (
     <div className="border border-gray-200 rounded-xl mb-4 overflow-hidden bg-white shadow-sm">
       <button
-        className="w-full p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full p-3 sm:p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h3 className="text-lg font-medium text-gray-800">{title}</h3>
+        <h3 className="text-base sm:text-lg font-medium text-gray-800">{title}</h3>
         {isExpanded ? (
           <ChevronUpIcon className="h-5 w-5 text-gray-500" />
         ) : (
@@ -38,13 +38,13 @@ function ExpandableSection({ title, content, keywords = [] }) {
       </button>
       
       {isExpanded && (
-        <div className="p-5">
+        <div className="p-3 sm:p-5">
           <p className="text-gray-700 mb-4 leading-relaxed">{content}</p>
           
           {keywords.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-800 mb-2">Keywords Detected:</h4>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
                 {keywords.map((keyword, index) => (
                   <span 
                     key={index} 
@@ -125,8 +125,8 @@ export default function AnalysisResults({ results }) {
     <div>
       {property && (
         <div className="mb-6">
-          <h3 className="text-xl font-medium mb-3 text-gray-900">{property.name || 'Unnamed Property'}</h3>
-          <div className="grid grid-cols-3 gap-3 text-sm">
+          <h3 className="text-lg sm:text-xl font-medium mb-3 text-gray-900">{property.name || 'Unnamed Property'}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
             <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Type:</span> <span className="text-gray-600">{property.property_type || 'N/A'}</span></div>
             <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Location:</span> <span className="text-gray-600">{property.location || 'N/A'}</span></div>
             <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Price:</span> <span className="text-gray-600">{property.price || 'N/A'}</span></div>
@@ -148,8 +148,8 @@ export default function AnalysisResults({ results }) {
       )}
       
       <div className="mb-8">
-        <h3 className="text-xl font-medium mb-4 text-gray-900">Scores</h3>
-        <div className="grid grid-cols-4 gap-4">
+        <h3 className="text-lg sm:text-xl font-medium mb-4 text-gray-900">Scores</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <ScoreCard 
             title="Seller Motivation" 
             score={analysis.seller_motivation_score} 
@@ -171,7 +171,7 @@ export default function AnalysisResults({ results }) {
       </div>
       
       <div className="mb-8">
-        <h3 className="text-xl font-medium mb-4 text-gray-900">Detailed Analysis</h3>
+        <h3 className="text-lg sm:text-xl font-medium mb-4 text-gray-900">Detailed Analysis</h3>
         
         <ExpandableSection 
           title="Seller Motivation" 
@@ -194,7 +194,7 @@ export default function AnalysisResults({ results }) {
       
       {analysis.summary && (
         <div className="mb-8">
-          <h3 className="text-xl font-medium mb-4 text-gray-900">Investment Recommendation</h3>
+          <h3 className="text-lg sm:text-xl font-medium mb-4 text-gray-900">Investment Recommendation</h3>
           <div className="p-5 bg-primary-50 border border-primary-100 rounded-xl">
             <p className="text-gray-800 leading-relaxed">{analysis.summary}</p>
           </div>
