@@ -1,8 +1,10 @@
 // Edge case test script to analyze property listings with unusual characteristics
 const fetch = require('node-fetch');
 
-// OpenAI API key (will be used for actual API calls)
-const API_KEY = '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';
+// OpenAI API key should be provided as an environment variable or through a secure method
+// DO NOT hardcode API keys in source code
+const API_KEY = process.env.OPENAI_API_KEY || 'your-api-key-here'; // Replace with your API key when testing locally
+
 
 // Test property listings with edge case characteristics
 const testProperties = [
