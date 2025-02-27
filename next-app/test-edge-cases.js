@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 
 // OpenAI API key should be provided as an environment variable or through a secure method
 // DO NOT hardcode API keys in source code
-const API_KEY = process.env.OPENAI_API_KEY || 'your-api-key-here'; // Replace with your API key when testing locally
+const API_KEY = process.env.OPENAI_API_KEY || 'REPLACE_WITH_YOUR_KEY'; // Replace with your API key when testing locally
 
 
 // Test property listings with edge case characteristics
