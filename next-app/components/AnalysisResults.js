@@ -6,13 +6,15 @@ import { docco } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 
 SyntaxHighlighter.registerLanguage('json', json);
 
-function ScoreCard({ title, score, className }) {
-  const scoreClass = score >= 7 ? 'score-high' : score >= 4 ? 'score-medium' : 'score-low';
+function ScoreCard({ title, score = 0, className }) {
+  // Default to 0 if score is undefined
+  const safeScore = typeof score === 'number' ? score : 0;
+  const scoreClass = safeScore >= 7 ? 'score-high' : safeScore >= 4 ? 'score-medium' : 'score-low';
   
   return (
     <div className={`score-card ${scoreClass} ${className}`}>
       <h3 className="text-lg font-medium mb-1">{title}</h3>
-      <p className="text-4xl font-semibold">{score.toFixed(1)}</p>
+      <p className="text-4xl font-semibold">{safeScore.toFixed(1)}</p>
       <p className="text-xs mt-1 text-gray-500 font-medium">out of 10</p>
     </div>
   );
@@ -65,18 +67,55 @@ export default function AnalysisResults({ results }) {
   
   if (!results) return null;
   
-  const { property, model_used, models_attempted, ...analysis } = results;
+  const { property, model_used, models_attempted, ...rawAnalysis } = results;
+  
+  // Handle different API response formats
+  // Create a normalized analysis object that works with both formats
+  const analysis = {
+    // Handle scores
+    seller_motivation_score: rawAnalysis.seller_motivation_score || 
+                             (rawAnalysis.scores && rawAnalysis.scores.seller_motivation) || 0,
+    transaction_complexity_score: rawAnalysis.transaction_complexity_score || 
+                                 (rawAnalysis.scores && rawAnalysis.scores.transaction_complexity) || 0,
+    property_characteristics_score: rawAnalysis.property_characteristics_score || 
+                                   (rawAnalysis.scores && rawAnalysis.scores.property_characteristics) || 0,
+    total_score: rawAnalysis.total_score || 
+                (rawAnalysis.scores && rawAnalysis.scores.total_weighted_score) || 0,
+    
+    // Handle explanations
+    seller_motivation_analysis: rawAnalysis.seller_motivation_analysis || 
+                               (rawAnalysis.explanations && { 
+                                 explanation: rawAnalysis.explanations.seller_motivation,
+                                 keywords: rawAnalysis.keywords?.seller_motivation || []
+                               }),
+    transaction_complexity_analysis: rawAnalysis.transaction_complexity_analysis || 
+                                    (rawAnalysis.explanations && {
+                                      explanation: rawAnalysis.explanations.transaction_complexity,
+                                      keywords: rawAnalysis.keywords?.transaction_complexity || []
+                                    }),
+    property_characteristics_analysis: rawAnalysis.property_characteristics_analysis || 
+                                      (rawAnalysis.explanations && {
+                                        explanation: rawAnalysis.explanations.property_characteristics,
+                                        keywords: rawAnalysis.keywords?.property_characteristics || []
+                                      }),
+    
+    // Handle summary
+    summary: rawAnalysis.summary || 
+            (rawAnalysis.explanations && rawAnalysis.explanations.overall_analysis)
+  };
   
   return (
     <div>
-      <div className="mb-6">
-        <h3 className="text-xl font-medium mb-3 text-gray-900">{property.name}</h3>
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Type:</span> <span className="text-gray-600">{property.property_type}</span></div>
-          <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Location:</span> <span className="text-gray-600">{property.location}</span></div>
-          <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Price:</span> <span className="text-gray-600">{property.price}</span></div>
+      {property && (
+        <div className="mb-6">
+          <h3 className="text-xl font-medium mb-3 text-gray-900">{property.name || 'Unnamed Property'}</h3>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Type:</span> <span className="text-gray-600">{property.property_type || 'N/A'}</span></div>
+            <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Location:</span> <span className="text-gray-600">{property.location || 'N/A'}</span></div>
+            <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Price:</span> <span className="text-gray-600">{property.price || 'N/A'}</span></div>
+          </div>
         </div>
-      </div>
+      )}
       
       {model_used && (
         <div className="mb-6 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-sm">
@@ -119,29 +158,31 @@ export default function AnalysisResults({ results }) {
         
         <ExpandableSection 
           title="Seller Motivation" 
-          content={analysis.seller_motivation_analysis.explanation}
-          keywords={analysis.seller_motivation_analysis.keywords}
+          content={analysis.seller_motivation_analysis?.explanation || "No explanation available"}
+          keywords={analysis.seller_motivation_analysis?.keywords || []}
         />
         
         <ExpandableSection 
           title="Transaction Complexity" 
-          content={analysis.transaction_complexity_analysis.explanation}
-          keywords={analysis.transaction_complexity_analysis.keywords}
+          content={analysis.transaction_complexity_analysis?.explanation || "No explanation available"}
+          keywords={analysis.transaction_complexity_analysis?.keywords || []}
         />
         
         <ExpandableSection 
           title="Property Characteristics" 
-          content={analysis.property_characteristics_analysis.explanation}
-          keywords={analysis.property_characteristics_analysis.keywords}
+          content={analysis.property_characteristics_analysis?.explanation || "No explanation available"}
+          keywords={analysis.property_characteristics_analysis?.keywords || []}
         />
       </div>
       
-      <div className="mb-8">
-        <h3 className="text-xl font-medium mb-4 text-gray-900">Investment Recommendation</h3>
-        <div className="p-5 bg-primary-50 border border-primary-100 rounded-xl">
-          <p className="text-gray-800 leading-relaxed">{analysis.summary}</p>
+      {analysis.summary && (
+        <div className="mb-8">
+          <h3 className="text-xl font-medium mb-4 text-gray-900">Investment Recommendation</h3>
+          <div className="p-5 bg-primary-50 border border-primary-100 rounded-xl">
+            <p className="text-gray-800 leading-relaxed">{analysis.summary}</p>
+          </div>
         </div>
-      </div>
+      )}
       
       <div className="flex justify-center">
         <button

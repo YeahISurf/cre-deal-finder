@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Fix Explanation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2563eb;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .error-box {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .fix-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #f1f5f9;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        .change-summary {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        .change-summary > div {
+            flex: 1;
+            padding: 15px;
+        }
+        .before {
+            background-color: #fee2e2;
+            border-radius: 4px 0 0 4px;
+        }
+        .after {
+            background-color: #ecfdf5;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Error Fix Explanation</h1>
+        
+        <div class="error-box">
+            <h3>Original Errors in Vercel Logs</h3>
+            <p><strong>Error 1:</strong> <code>SyntaxError: Unterminated string in JSON at position 1151 (line 16 column 6)</code></p>
+            <p><strong>Error 2:</strong> <code>BadRequestError: 400 Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.</code></p>
+        </div>
+
+        <h2>Problem Analysis</h2>
+        <p>The API was encountering two distinct issues:</p>
+        <ol>
+            <li>A JSON parsing error due to unterminated strings in the response from the o1 model</li>
+            <li>An invalid parameter error when using the o1-mini model, as it doesn't support the response_format parameter</li>
+        </ol>
+
+        <h2>Changes Made</h2>
+
+        <h3>1. Fixed JSON Parsing Error</h3>
+        <div class="change-summary">
+            <div class="before">
+                <h4>Before</h4>
+                <p>Property descriptions were passed directly to the AI models without sanitization, potentially causing JSON parsing errors if they contained special characters or line breaks.</p>
+            </div>
+            <div class="after">
+                <h4>After</h4>
+                <p>Added sanitization to property descriptions by replacing line breaks with spaces and escaping double quotes. Also added null checks for all property fields.</p>
+            </div>
+        </div>
+
+        <div class="fix-box">
+            <h4>Sanitization Code Added:</h4>
+            <pre><code>// Sanitize property description to prevent JSON parsing issues
+const sanitizedDescription = property.description
+  ? property.description.replace(/[\r\n]+/g, ' ').replace(/"/g, '\\"')
+  : '';</code></pre>
+        </div>
+
+        <h3>2. Fixed o1-mini Model Error</h3>
+        <div class="change-summary">
+            <div class="before">
+                <h4>Before</h4>
+                <p>The o1-mini model was being called with the <code>response_format: { type: "json_object" }</code> parameter, which it doesn't support.</p>
+            </div>
+            <div class="after">
+                <h4>After</h4>
+                <p>Removed the unsupported parameter and enhanced the prompt to ensure the model returns properly formatted JSON.</p>
+            </div>
+        </div>
+
+        <div class="fix-box">
+            <h4>Parameter Removed:</h4>
+            <pre><code>// For o1-mini, we can't use 'system' role, can't set temperature, and can't use response_format
+const response = await openai.chat.completions.create({
+  model: "o1-mini",
+  messages: [
+    {
+      // Using user role instead of system role
+      role: "user",
+      content: `...`
+    }
+  ],
+  max_completion_tokens: 1500  // Correct parameter for o1-mini
+  // Removed response_format as it's not supported by o1-mini
+});</code></pre>
+        </div>
+
+        <h3>3. Enhanced Error Handling</h3>
+        <div class="fix-box">
+            <h4>Added Better Error Handling:</h4>
+            <pre><code>try {
+  // Parse the JSON response with additional error handling
+  const parsedContent = JSON.parse(content);
+  return {
+    ...parsedContent,
+    model_used: "o1-mini",
+    models_attempted: ["o1", "o1-mini"]
+  };
+} catch (parseError) {
+  console.error('JSON parsing error with o1-mini response:', parseError.message);
+  console.error('Raw content causing parse error:', content);
+  throw new Error(`Failed to parse o1-mini response: ${parseError.message}`);
+}</code></pre>
+        </div>
+
+        <h3>4. Improved Prompts</h3>
+        <div class="fix-box">
+            <h4>Enhanced Prompt Instructions:</h4>
+            <pre><code>IMPORTANT: Provide your response as a valid JSON object with scores, explanations, and identified keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors. The response must be valid JSON that can be parsed with JSON.parse().</code></pre>
+        </div>
+
+        <h2>Result</h2>
+        <p>The API now has a proper fallback chain from o1 → o1-mini → GPT-3.5-Turbo, with each step having appropriate error handling and sanitization. This makes the API more robust by:</p>
+        <ul>
+            <li>Properly handling property descriptions with special characters</li>
+            <li>Implementing appropriate fallback mechanisms between models</li>
+            <li>Adding better error handling and logging</li>
+            <li>Using model-specific parameters correctly</li>
+        </ul>
+    </div>
+</body>
+</html>

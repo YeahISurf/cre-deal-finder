@@ -33,6 +33,12 @@ async function analyzeWithO1(apiKey, property) {
       apiKey: apiKey
     });
     
+    // Sanitize property description to prevent JSON parsing issues
+    // Remove any characters that might cause JSON parsing problems
+    const sanitizedDescription = property.description
+      ? property.description.replace(/[\r\n]+/g, ' ').replace(/"/g, '\\"')
+      : '';
+    
     // For o1, we need to use 'max_completion_tokens' instead of 'max_tokens'
     // and cannot use 'temperature' parameter
     const response = await openai.chat.completions.create({
@@ -42,14 +48,14 @@ async function analyzeWithO1(apiKey, property) {
           role: "user",
           content: `You are a commercial real estate investment analyst. Analyze this property listing and provide scores from 1-10 for seller motivation, transaction complexity, and property characteristics, plus a total weighted score and analysis.
 
-Property: ${property.name}
-Type: ${property.property_type}
-Location: ${property.location}
-Price: ${property.price}
+Property: ${property.name || 'N/A'}
+Type: ${property.property_type || 'N/A'}
+Location: ${property.location || 'N/A'}
+Price: ${property.price || 'N/A'}
 
-Description: ${property.description}
+Description: ${sanitizedDescription}
 
-Provide your response as a JSON object with scores, explanations, and identified keywords. Return valid JSON format.`
+IMPORTANT: Provide your response as a valid JSON object with scores, explanations, and identified keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors.`
         }
       ],
       max_completion_tokens: 1500,  // Correct parameter for o1
@@ -58,11 +64,35 @@ Provide your response as a JSON object with scores, explanations, and identified
     
     console.log('Received response from o1');
     const content = response.choices[0].message.content;
-    return {
-      ...JSON.parse(content),
-      model_used: "o1",
-      models_attempted: ["o1"]
-    };
+    
+    try {
+      // Clean up the content if it contains markdown code blocks
+      let cleanContent = content;
+      
+      // Remove markdown code block syntax if present
+      if (content.includes('```json')) {
+        cleanContent = content.replace(/```json\n|\n```/g, '');
+      } else if (content.includes('```')) {
+        cleanContent = content.replace(/```\n|\n```/g, '');
+      }
+      
+      // Fix missing commas in JSON if present (common issue with AI-generated JSON)
+      cleanContent = cleanContent.replace(/"\s*\n\s*"/g, '",\n"');
+      cleanContent = cleanContent.replace(/}\s*\n\s*"/g, '},\n"');
+      cleanContent = cleanContent.replace(/}\s*\n\s*{/g, '},\n{');
+      
+      // Parse the cleaned JSON response
+      const parsedContent = JSON.parse(cleanContent);
+      return {
+        ...parsedContent,
+        model_used: "o1",
+        models_attempted: ["o1"]
+      };
+    } catch (parseError) {
+      console.error('JSON parsing error with o1 response:', parseError.message);
+      console.error('Raw content causing parse error:', content);
+      throw new Error(`Failed to parse o1 response: ${parseError.message}`);
+    }
   } catch (error) {
     console.error('Error with o1 model:', error);
     throw error;
@@ -79,7 +109,12 @@ async function analyzeWithO1Mini(apiKey, property) {
       apiKey: apiKey
     });
     
-    // For o1-mini, we can't use 'system' role and can't set temperature
+    // Sanitize property description to prevent JSON parsing issues
+    const sanitizedDescription = property.description
+      ? property.description.replace(/[\r\n]+/g, ' ').replace(/"/g, '\\"')
+      : '';
+    
+    // For o1-mini, we can't use 'system' role, can't set temperature, and can't use response_format
     const response = await openai.chat.completions.create({
       model: "o1-mini",
       messages: [
@@ -88,27 +123,52 @@ async function analyzeWithO1Mini(apiKey, property) {
           role: "user",
           content: `You are a commercial real estate investment analyst. Analyze this property listing and provide scores from 1-10 for seller motivation, transaction complexity, and property characteristics, plus a total weighted score and analysis.
 
-Property: ${property.name}
-Type: ${property.property_type}
-Location: ${property.location}
-Price: ${property.price}
+Property: ${property.name || 'N/A'}
+Type: ${property.property_type || 'N/A'}
+Location: ${property.location || 'N/A'}
+Price: ${property.price || 'N/A'}
 
-Description: ${property.description}
+Description: ${sanitizedDescription}
 
-Provide your response as a JSON object with scores, explanations, and identified keywords. Return valid JSON format.`
+IMPORTANT: Provide your response as a valid JSON object with scores, explanations, and identified keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors. The response must be valid JSON that can be parsed with JSON.parse().`
         }
       ],
-      max_completion_tokens: 1500,  // Correct parameter for o1-mini
-      response_format: { type: "json_object" }
+      max_completion_tokens: 1500  // Correct parameter for o1-mini
+      // Removed response_format as it's not supported by o1-mini
     });
     
     console.log('Received response from o1-mini');
     const content = response.choices[0].message.content;
-    return {
-      ...JSON.parse(content),
-      model_used: "o1-mini",
-      models_attempted: ["o1", "o1-mini"]
-    };
+    
+    try {
+      // Clean up the content if it contains markdown code blocks
+      let cleanContent = content;
+      
+      // Remove markdown code block syntax if present
+      if (cleanContent.includes('```json')) {
+        cleanContent = cleanContent.replace(/```json\n|\n```/g, '');
+      } else if (cleanContent.includes('```')) {
+        cleanContent = cleanContent.replace(/```\n|\n```/g, '');
+      }
+      
+      // Fix missing commas in JSON if present (common issue with AI-generated JSON)
+      cleanContent = cleanContent.replace(/"\s*\n\s*"/g, '",\n"');
+      cleanContent = cleanContent.replace(/}\s*\n\s*"/g, '},\n"');
+      cleanContent = cleanContent.replace(/}\s*\n\s*{/g, '},\n{');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*"/g, '$1,\n"');
+      
+      // Parse the cleaned JSON response
+      const parsedContent = JSON.parse(cleanContent);
+      return {
+        ...parsedContent,
+        model_used: "o1-mini",
+        models_attempted: ["o1", "o1-mini"]
+      };
+    } catch (parseError) {
+      console.error('JSON parsing error with o1-mini response:', parseError.message);
+      console.error('Raw content causing parse error:', content);
+      throw new Error(`Failed to parse o1-mini response: ${parseError.message}`);
+    }
   } catch (error) {
     console.error('Error with o1-mini model:', error);
     throw error;
@@ -125,24 +185,29 @@ async function analyzeWithGPT(apiKey, property) {
       apiKey: apiKey
     });
     
+    // Sanitize property description to prevent JSON parsing issues
+    const sanitizedDescription = property.description
+      ? property.description.replace(/[\r\n]+/g, ' ').replace(/"/g, '\\"')
+      : '';
+    
     // Standard format for GPT models
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics. Your response must be in JSON format.`
+          content: `You are a commercial real estate investment analyst. Analyze the property listing and provide scores, explanations, and keywords for seller motivation, transaction complexity, and property characteristics. Your response must be in valid JSON format without any syntax errors.`
         },
         {
           role: "user",
-          content: `Property: ${property.name}
-Type: ${property.property_type}
-Location: ${property.location}
-Price: ${property.price}
+          content: `Property: ${property.name || 'N/A'}
+Type: ${property.property_type || 'N/A'}
+Location: ${property.location || 'N/A'}
+Price: ${property.price || 'N/A'}
 
-Description: ${property.description}
+Description: ${sanitizedDescription}
 
-Analyze this listing and provide scores from 1-10 for each category. Return the results as JSON with scores, explanations, and keywords.`
+Analyze this listing and provide scores from 1-10 for each category. Return the results as JSON with scores, explanations, and keywords. Ensure your response is properly formatted JSON without any unterminated strings or syntax errors.`
         }
       ],
       temperature: 0.1,
@@ -152,11 +217,36 @@ Analyze this listing and provide scores from 1-10 for each category. Return the 
     
     console.log('Received response from GPT-3.5-Turbo');
     const content = response.choices[0].message.content;
-    return {
-      ...JSON.parse(content),
-      model_used: "gpt-3.5-turbo",
-      models_attempted: ["o1", "o1-mini", "gpt-3.5-turbo"]
-    };
+    
+    try {
+      // Clean up the content if it contains markdown code blocks
+      let cleanContent = content;
+      
+      // Remove markdown code block syntax if present
+      if (cleanContent.includes('```json')) {
+        cleanContent = cleanContent.replace(/```json\n|\n```/g, '');
+      } else if (cleanContent.includes('```')) {
+        cleanContent = cleanContent.replace(/```\n|\n```/g, '');
+      }
+      
+      // Fix missing commas in JSON if present (common issue with AI-generated JSON)
+      cleanContent = cleanContent.replace(/"\s*\n\s*"/g, '",\n"');
+      cleanContent = cleanContent.replace(/}\s*\n\s*"/g, '},\n"');
+      cleanContent = cleanContent.replace(/}\s*\n\s*{/g, '},\n{');
+      cleanContent = cleanContent.replace(/(\d+)\s*\n\s*"/g, '$1,\n"');
+      
+      // Parse the cleaned JSON response
+      const parsedContent = JSON.parse(cleanContent);
+      return {
+        ...parsedContent,
+        model_used: "gpt-3.5-turbo",
+        models_attempted: ["o1", "o1-mini", "gpt-3.5-turbo"]
+      };
+    } catch (parseError) {
+      console.error('JSON parsing error with GPT-3.5-Turbo response:', parseError.message);
+      console.error('Raw content causing parse error:', content);
+      throw new Error(`Failed to parse GPT-3.5-Turbo response: ${parseError.message}`);
+    }
   } catch (error) {
     console.error('Error with GPT-3.5-Turbo model:', error);
     throw error;
