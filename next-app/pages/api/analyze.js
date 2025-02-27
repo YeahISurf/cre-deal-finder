@@ -258,6 +258,17 @@ export default async function handler(req, res) {
   console.log('Received request:', { method: req.method, body: req.body ? true : false });
   const start = Date.now();
 
+  // Set a timeout to ensure we respond within Vercel's function timeout limit
+  // This will return a fallback response if the analysis takes too long
+  const TIMEOUT_MS = 9000; // 9 seconds (Vercel has a 10s limit on free tier)
+  let timeoutId;
+  
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error('FUNCTION_TIMEOUT'));
+    }, TIMEOUT_MS);
+  });
+
   // Always ensure we set JSON content type
   res.setHeader('Content-Type', 'application/json');
 
@@ -265,6 +276,7 @@ export default async function handler(req, res) {
     // Only allow POST requests
     if (req.method !== 'POST') {
       console.log('Method not allowed');
+      clearTimeout(timeoutId);
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
@@ -273,62 +285,68 @@ export default async function handler(req, res) {
     // Validate request data
     if (!apiKey) {
       console.log('Missing API key');
+      clearTimeout(timeoutId);
       return res.status(400).json({ error: 'OpenAI API key is required' });
     }
 
     if (!property || !property.description) {
       console.log('Missing property description');
+      clearTimeout(timeoutId);
       return res.status(400).json({ error: 'Property description is required' });
     }
     
-    const modelsAttempted = [];
-    
+    // Use GPT-3.5-Turbo directly for faster response times on Vercel
+    // This avoids the cascading fallback that can lead to timeouts
     try {
-      // Try o1 first (most premium model)
-      try {
-        modelsAttempted.push("o1");
-        const o1Result = await analyzeWithO1(apiKey, property);
-        console.log('o1 succeeded, sending response');
-        console.log(`Execution time: ${Date.now() - start}ms`);
-        return res.status(200).json(o1Result);
-      } catch (o1Error) {
-        console.log("o1 model failed, falling back to o1-mini");
-        console.error("O1 Error details:", o1Error.message);
-        
-        // If o1 fails, try o1-mini
-        try {
-          modelsAttempted.push("o1-mini");
-          const o1MiniResult = await analyzeWithO1Mini(apiKey, property);
-          console.log('o1-mini succeeded, sending response');
-          console.log(`Execution time: ${Date.now() - start}ms`);
-          return res.status(200).json(o1MiniResult);
-        } catch (o1MiniError) {
-          console.log("o1-mini model failed, falling back to GPT-3.5-Turbo");
-          console.error("O1-mini Error details:", o1MiniError.message);
-          
-          // If o1-mini fails, use GPT-3.5-Turbo as reliable fallback
-          try {
-            modelsAttempted.push("gpt-3.5-turbo");
-            const gptResult = await analyzeWithGPT(apiKey, property);
-            console.log('GPT succeeded, sending response');
-            console.log(`Execution time: ${Date.now() - start}ms`);
-            return res.status(200).json(gptResult);
-          } catch (gptError) {
-            console.error("GPT-3.5-Turbo Error details:", gptError.message);
-            throw new Error(`All models failed: O1 Error: ${o1Error.message}, O1-mini Error: ${o1MiniError.message}, GPT Error: ${gptError.message}`);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('All models failed:', error);
+      // Race between the analysis and the timeout
+      const result = await Promise.race([
+        analyzeWithGPT(apiKey, property),
+        timeoutPromise
+      ]);
       
-      // Return error details instead of fallback analysis with status 500
+      clearTimeout(timeoutId);
+      console.log('Analysis succeeded, sending response');
+      console.log(`Execution time: ${Date.now() - start}ms`);
+      return res.status(200).json(result);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error('Analysis error:', error);
+      
+      // If we hit our internal timeout, return a simplified fallback response
+      if (error.message === 'FUNCTION_TIMEOUT') {
+        console.log('Function timeout reached, sending fallback response');
+        
+        // Create a simplified response based on the property description
+        // This ensures we return something useful even if the full analysis times out
+        const description = property.description || '';
+        const hasMotivatedSeller = /urgent|must sell|reduced|motivated|quick sale/i.test(description);
+        
+        return res.status(200).json({
+          scores: {
+            sellerMotivation: hasMotivatedSeller ? 8 : 5,
+            transactionComplexity: 6,
+            propertyCharacteristics: 7,
+            totalWeightedScore: hasMotivatedSeller ? 7 : 6
+          },
+          analysis: {
+            sellerMotivationExplanation: hasMotivatedSeller 
+              ? "The listing shows signs of a motivated seller based on key phrases in the description."
+              : "The listing doesn't show clear signs of seller motivation.",
+            transactionComplexityExplanation: "The transaction appears to have moderate complexity based on the available information.",
+            propertyCharacteristicsExplanation: "The property shows potential based on the provided description."
+          },
+          model_used: "Fallback Analysis (Timeout)",
+          models_attempted: ["Analysis timed out"]
+        });
+      }
+      
+      // Return error details with status 500
       const errorResponse = {
         error: true,
         message: "API Error - Debug Information",
         error_details: error.toString(),
         error_message: error.message,
-        models_attempted: modelsAttempted,
+        models_attempted: ["gpt-3.5-turbo"],
         stack_trace: error.stack,
         execution_time_ms: Date.now() - start
       };
@@ -338,6 +356,7 @@ export default async function handler(req, res) {
     }
   } catch (globalError) {
     // Global error handler as a safety net
+    clearTimeout(timeoutId);
     console.error('Unhandled error in API handler:', globalError);
     
     // Ensure we always return JSON, even for unhandled errors
