@@ -74,12 +74,16 @@ export default function AnalysisResults({ results }) {
   const analysis = {
     // Handle scores
     seller_motivation_score: rawAnalysis.seller_motivation_score || 
+                             (rawAnalysis.scores && rawAnalysis.scores.sellerMotivation) || 
                              (rawAnalysis.scores && rawAnalysis.scores.seller_motivation) || 0,
     transaction_complexity_score: rawAnalysis.transaction_complexity_score || 
+                                 (rawAnalysis.scores && rawAnalysis.scores.transactionComplexity) || 
                                  (rawAnalysis.scores && rawAnalysis.scores.transaction_complexity) || 0,
     property_characteristics_score: rawAnalysis.property_characteristics_score || 
+                                   (rawAnalysis.scores && rawAnalysis.scores.propertyCharacteristics) || 
                                    (rawAnalysis.scores && rawAnalysis.scores.property_characteristics) || 0,
     total_score: rawAnalysis.total_score || 
+                (rawAnalysis.scores && rawAnalysis.scores.totalWeightedScore) || 
                 (rawAnalysis.scores && rawAnalysis.scores.total_weighted_score) || 0,
     
     // Handle explanations
@@ -87,21 +91,34 @@ export default function AnalysisResults({ results }) {
                                (rawAnalysis.explanations && { 
                                  explanation: rawAnalysis.explanations.seller_motivation,
                                  keywords: rawAnalysis.keywords?.seller_motivation || []
+                               }) ||
+                               (rawAnalysis.analysis && {
+                                 explanation: rawAnalysis.analysis.sellerMotivationExplanation,
+                                 keywords: rawAnalysis.keywords?.sellerMotivation || []
                                }),
     transaction_complexity_analysis: rawAnalysis.transaction_complexity_analysis || 
                                     (rawAnalysis.explanations && {
                                       explanation: rawAnalysis.explanations.transaction_complexity,
                                       keywords: rawAnalysis.keywords?.transaction_complexity || []
+                                    }) ||
+                                    (rawAnalysis.analysis && {
+                                      explanation: rawAnalysis.analysis.transactionComplexityExplanation,
+                                      keywords: rawAnalysis.keywords?.transactionComplexity || []
                                     }),
     property_characteristics_analysis: rawAnalysis.property_characteristics_analysis || 
                                       (rawAnalysis.explanations && {
                                         explanation: rawAnalysis.explanations.property_characteristics,
                                         keywords: rawAnalysis.keywords?.property_characteristics || []
+                                      }) ||
+                                      (rawAnalysis.analysis && {
+                                        explanation: rawAnalysis.analysis.propertyCharacteristicsExplanation,
+                                        keywords: rawAnalysis.keywords?.propertyCharacteristics || []
                                       }),
     
     // Handle summary
     summary: rawAnalysis.summary || 
-            (rawAnalysis.explanations && rawAnalysis.explanations.overall_analysis)
+            (rawAnalysis.explanations && rawAnalysis.explanations.overall_analysis) ||
+            (rawAnalysis.analysis && rawAnalysis.analysis.overallAnalysis)
   };
   
   return (
