@@ -1,7 +1,7 @@
 # PFISH CRE AI DEAL FINDER
 
 ![Project Status](https://img.shields.io/badge/status-beta-yellow)
-![Version](https://img.shields.io/badge/version-1.4.0-blue)
+![Version](https://img.shields.io/badge/version-1.5.0-blue)
 ![OpenAI](https://img.shields.io/badge/OpenAI-o1%20%7C%20o1--mini%20%7C%20GPT--3.5--turbo-green)
 
 Premium AI-powered analysis of commercial real estate listings to identify investment opportunities based on seller motivation, transaction complexity, and property characteristics.
@@ -18,7 +18,7 @@ This tool automatically analyzes commercial real estate listings using OpenAI to
 
 ## Project Status and Known Issues
 
-**Current Status**: Beta (v1.4.0)
+**Current Status**: Beta (v1.5.0)
 
 ### 🐛 Known Issues
 
@@ -276,7 +276,15 @@ The tool evaluates listings based on three main categories:
 
 ## Version History
 
-### v1.4.0 (Current)
+### v1.5.0 (Current)
+- Enhanced API endpoint with improved error handling
+- Better JSON parsing for all models
+- New API endpoint testing utility
+- Increased timeout handling for Vercel functions (55s)
+- Improved model-specific parameter handling
+- Enhanced error reporting with detailed diagnostics
+
+### v1.4.0
 - Enhanced documentation with detailed model testing instructions
 - Added web preview for easier demonstration
 - Improved error handling for edge cases
@@ -315,22 +323,21 @@ The tool evaluates listings based on three main categories:
 
 ## Future Roadmap
 
-### v1.4.0 (Planned)
+### v1.6.0 (Planned)
 - Add support for multiple property analysis in batch mode
 - Implement property comparison features
 - Add data persistence (save analyses to local storage)
 - Enhance mobile responsiveness
 - Add export functionality (PDF, CSV)
-- Improve error reporting with more user-friendly messages
 
-### v1.5.0 (Planned)
+### v2.0.0 (Planned)
 - Add user authentication system
 - Implement saved property portfolios
 - Add custom scoring weights
 - Enhance UI with dark mode support
 - Add property image analysis capabilities
 
-### v2.0.0 (Future)
+### v2.1.0 (Future)
 - Integrate with LoopNet scraper for automated listing analysis
 - Add geographic filtering and map visualization
 - Implement trend tracking and market analysis
@@ -406,7 +413,8 @@ cre-deal-finder/
 │   │   ├── _document.js        # HTML document setup
 │   │   ├── index.js            # Main application page
 │   │   └── api/                # API routes
-│   │       └── analyze.js      # OpenAI analysis endpoint
+│   │       └── analyze.js      # OpenAI analysis endpoint with model cascade
+│   ├── test-api-endpoint.js    # API endpoint testing utility
 │   ├── components/             # React components
 │   │   ├── AnalysisResults.js  # Results display component
 │   │   └── PropertyForm.js     # Property input form
