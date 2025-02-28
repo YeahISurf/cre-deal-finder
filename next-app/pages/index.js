@@ -1,8 +1,31 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 import PropertyForm from '../components/PropertyForm';
 import AnalysisResults from '../components/AnalysisResults';
-import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  useDisclosure,
+  Text,
+  Box,
+  Flex,
+  Grid,
+  Heading,
+  List,
+  ListItem,
+  ListIcon,
+  Divider,
+  Badge,
+  useColorModeValue
+} from '@chakra-ui/react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 // Fallback mock data in case the API fails completely
 const FALLBACK_ANALYSIS = {
@@ -37,6 +60,22 @@ export default function Home() {
   const [debugInfo, setDebugInfo] = useState(null);
   const [rawResponse, setRawResponse] = useState('');
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const analysisResultsRef = useRef(null);
+  
+  // Effect to scroll to analysis results on mobile when analysis completes
+  useEffect(() => {
+    // Only scroll when analysis completes and results exist
+    if (!isAnalyzing && results && analysisResultsRef.current) {
+      // Check if we're on mobile (screen width < 768px)
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        // Scroll to the analysis results section with a small delay to ensure rendering is complete
+        setTimeout(() => {
+          analysisResultsRef.current.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [isAnalyzing, results]);
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey && !skipAPI) {
@@ -190,7 +229,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-gray-50/50">
       <Head>
         <title>PFISH CRE AI DEAL FINDER</title>
         <meta name="description" content="AI-powered commercial real estate deal finder" />
@@ -198,7 +237,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-8 md:py-6 md:flex md:flex-col md:h-[calc(100vh-80px)]">
         <div className="flex flex-col sm:flex-row items-center justify-center mb-8 text-center">
           <div className="bg-gradient-to-r from-primary-600 to-primary-500 p-3 rounded-2xl shadow-md mr-0 sm:mr-3 mb-3 sm:mb-0">
             <BuildingOfficeIcon className="h-8 w-8 text-white" />
@@ -206,13 +245,268 @@ export default function Home() {
           <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900">PFISH CRE AI DEAL FINDER</h1>
         </div>
         
-        <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto text-base sm:text-lg px-2">
-          Premium AI-powered analysis of commercial real estate listings to identify investment opportunities
-          based on seller motivation, transaction complexity, and property characteristics.
-        </p>
+        <div className="flex flex-col items-center mb-6">
+          <p className="text-center text-gray-600 mb-4 max-w-2xl mx-auto text-base sm:text-lg px-2">
+            Premium AI-powered analysis of commercial real estate listings to identify investment opportunities
+            based on seller motivation, transaction complexity, and property characteristics.
+          </p>
+          
+          <Button
+            onClick={onOpen}
+            size="md"
+            colorScheme="primary"
+            variant="outline"
+            borderRadius="xl"
+            boxShadow="sm"
+            _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
+            _active={{ boxShadow: "inner" }}
+            leftIcon={<QuestionMarkCircleIcon className="h-5 w-5" />}
+            transition="all 0.2s"
+          >
+            How to Use This Tool
+          </Button>
+        </div>
+        
+        <Modal isOpen={isOpen} onClose={onClose} size="2xl" motionPreset="slideInBottom">
+          <ModalOverlay backdropFilter="blur(4px)" />
+          <ModalContent borderRadius="xl" boxShadow="xl" mx={4} maxH={{ base: "90vh", md: "80vh" }}>
+            <Box bgGradient="linear(to-r, primary.600, primary.500)" borderTopRadius="xl" p={5}>
+              <Flex justify="space-between" align="center">
+                <Heading size="lg" color="white" fontWeight="semibold">How to Use This Tool</Heading>
+                <ModalCloseButton position="static" color="white" />
+              </Flex>
+            </Box>
+            
+            <ModalBody py={5} px={{ base: 5, md: 6 }} overflowY="auto">
+              <Box mb={5}>
+                <Heading size="md" mb={3} color="gray.800">Welcome to PFISH CRE AI Deal Finder</Heading>
+                <Text color="gray.600" fontSize="sm" lineHeight="tall">
+                  This tool analyzes commercial real estate listings to identify investment opportunities.
+                </Text>
+              </Box>
+              
+              {/* Two-column layout for desktop, single column for mobile */}
+              <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+                {/* Left column on desktop */}
+                <Box>
+                  <List spacing={4}>
+                    <ListItem>
+                      <Flex>
+                        <Box 
+                          as="span" 
+                          bg="primary.500" 
+                          color="white" 
+                          borderRadius="full" 
+                          w={8} 
+                          h={8} 
+                          display="flex" 
+                          alignItems="center" 
+                          justifyContent="center" 
+                          fontWeight="bold"
+                          mr={3}
+                          flexShrink={0}
+                        >
+                          1
+                        </Box>
+                        <Box>
+                          <Heading size="sm" mb={1} color="gray.800">Enter Your OpenAI API Key</Heading>
+                          <Text color="gray.600" fontSize="sm" lineHeight="tall">
+                            Paste your OpenAI API key in the field. Not stored on our servers.
+                          </Text>
+                          <Badge colorScheme="blue" mt={2} fontSize="xs">Required for AI Analysis</Badge>
+                        </Box>
+                      </Flex>
+                    </ListItem>
+                    
+                    <ListItem>
+                      <Flex>
+                        <Box 
+                          as="span" 
+                          bg="primary.500" 
+                          color="white" 
+                          borderRadius="full" 
+                          w={8} 
+                          h={8} 
+                          display="flex" 
+                          alignItems="center" 
+                          justifyContent="center" 
+                          fontWeight="bold"
+                          mr={3}
+                          flexShrink={0}
+                        >
+                          2
+                        </Box>
+                        <Box>
+                          <Heading size="sm" mb={1} color="gray.800">Choose Input Method</Heading>
+                          <Text color="gray.600" fontSize="sm" lineHeight="tall">
+                            Select "Enter Manually" or "Use Sample" for pre-configured examples.
+                          </Text>
+                          <Flex mt={2} gap={2} flexWrap="wrap">
+                            <Badge colorScheme="green" fontSize="xs">Manual Entry</Badge>
+                            <Badge colorScheme="purple" fontSize="xs">Sample Properties</Badge>
+                          </Flex>
+                        </Box>
+                      </Flex>
+                    </ListItem>
+                    
+                    <ListItem>
+                      <Flex>
+                        <Box 
+                          as="span" 
+                          bg="primary.500" 
+                          color="white" 
+                          borderRadius="full" 
+                          w={8} 
+                          h={8} 
+                          display="flex" 
+                          alignItems="center" 
+                          justifyContent="center" 
+                          fontWeight="bold"
+                          mr={3}
+                          flexShrink={0}
+                        >
+                          3
+                        </Box>
+                        <Box>
+                          <Heading size="sm" mb={1} color="gray.800">Enter Property Details</Heading>
+                          <Text color="gray.600" fontSize="sm" lineHeight="tall">
+                            Fill in property info and description. More details = better analysis.
+                          </Text>
+                          <Text color="primary.600" fontSize="sm" fontWeight="medium" mt={2}>
+                            Tip: Include price history, seller situation, and property condition.
+                          </Text>
+                        </Box>
+                      </Flex>
+                    </ListItem>
+                  </List>
+                </Box>
+                
+                {/* Right column on desktop */}
+                <Box>
+                  <List spacing={4}>
+                    <ListItem>
+                      <Flex>
+                        <Box 
+                          as="span" 
+                          bg="primary.500" 
+                          color="white" 
+                          borderRadius="full" 
+                          w={8} 
+                          h={8} 
+                          display="flex" 
+                          alignItems="center" 
+                          justifyContent="center" 
+                          fontWeight="bold"
+                          mr={3}
+                          flexShrink={0}
+                        >
+                          4
+                        </Box>
+                        <Box>
+                          <Heading size="sm" mb={1} color="gray.800">Analyze the Property</Heading>
+                          <Text color="gray.600" fontSize="sm" lineHeight="tall">
+                            Click "Analyze Property" to process your listing using AI models.
+                          </Text>
+                        </Box>
+                      </Flex>
+                    </ListItem>
+                    
+                    <ListItem>
+                      <Flex>
+                        <Box 
+                          as="span" 
+                          bg="primary.500" 
+                          color="white" 
+                          borderRadius="full" 
+                          w={8} 
+                          h={8} 
+                          display="flex" 
+                          alignItems="center" 
+                          justifyContent="center" 
+                          fontWeight="bold"
+                          mr={3}
+                          flexShrink={0}
+                        >
+                          5
+                        </Box>
+                        <Box>
+                          <Heading size="sm" mb={1} color="gray.800">Interpret Results</Heading>
+                          <Text color="gray.600" fontSize="sm" lineHeight="tall">
+                            Review the analysis scores and explanations:
+                          </Text>
+                          <Grid templateColumns="repeat(2, 1fr)" gap={2} mt={2}>
+                            <Box>
+                              <List spacing={1}>
+                                <ListItem display="flex" alignItems="center">
+                                  <ListIcon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                                  <Text fontSize="sm" color="gray.700">Seller Motivation</Text>
+                                </ListItem>
+                                <ListItem display="flex" alignItems="center">
+                                  <ListIcon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                                  <Text fontSize="sm" color="gray.700">Transaction Complexity</Text>
+                                </ListItem>
+                              </List>
+                            </Box>
+                            <Box>
+                              <List spacing={1}>
+                                <ListItem display="flex" alignItems="center">
+                                  <ListIcon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                                  <Text fontSize="sm" color="gray.700">Property Characteristics</Text>
+                                </ListItem>
+                                <ListItem display="flex" alignItems="center">
+                                  <ListIcon as={CheckCircleIcon} color="green.500" boxSize={4} />
+                                  <Text fontSize="sm" color="gray.700">Total Score</Text>
+                                </ListItem>
+                              </List>
+                            </Box>
+                          </Grid>
+                        </Box>
+                      </Flex>
+                    </ListItem>
+                    
+                    <Box bg="blue.50" p={4} borderRadius="lg" borderWidth="1px" borderColor="blue.100" mt={2}>
+                      <Heading size="sm" mb={2} color="blue.700">Pro Tips</Heading>
+                      <Grid templateColumns="repeat(2, 1fr)" gap={2}>
+                        <ListItem fontSize="sm" color="blue.700" display="flex" alignItems="center">
+                          <ListIcon as={CheckCircleIcon} color="blue.500" boxSize={4} />
+                          <Text>Include price history</Text>
+                        </ListItem>
+                        <ListItem fontSize="sm" color="blue.700" display="flex" alignItems="center">
+                          <ListIcon as={CheckCircleIcon} color="blue.500" boxSize={4} />
+                          <Text>Mention seller urgency</Text>
+                        </ListItem>
+                        <ListItem fontSize="sm" color="blue.700" display="flex" alignItems="center">
+                          <ListIcon as={CheckCircleIcon} color="blue.500" boxSize={4} />
+                          <Text>Detail property condition</Text>
+                        </ListItem>
+                        <ListItem fontSize="sm" color="blue.700" display="flex" alignItems="center">
+                          <ListIcon as={CheckCircleIcon} color="blue.500" boxSize={4} />
+                          <Text>Note occupancy rates</Text>
+                        </ListItem>
+                      </Grid>
+                    </Box>
+                  </List>
+                </Box>
+              </Grid>
+            </ModalBody>
+            
+            <ModalFooter bg="gray.50" borderBottomRadius="xl" borderTop="1px" borderColor="gray.200" py={4}>
+              <Button 
+                colorScheme="primary" 
+                size="md"
+                onClick={onClose}
+                borderRadius="xl"
+                boxShadow="sm"
+                _hover={{ boxShadow: "md" }}
+              >
+                Got It
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          <div className="card">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto md:flex-grow md:flex md:overflow-hidden">
+          <div className="card md:overflow-y-auto md:flex-1">
             <h2 className="text-xl sm:text-2xl font-medium mb-6 text-gray-900">Property Analysis</h2>
             
             <div className="mb-6">
@@ -296,7 +590,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="card overflow-auto subtle-scroll max-h-[600px] md:max-h-[800px]">
+          <div ref={analysisResultsRef} className="card max-h-none overflow-visible md:overflow-auto md:subtle-scroll max-h-full md:max-h-[600px] md:flex-1">
             <h2 className="text-xl sm:text-2xl font-medium mb-6 text-gray-900 sticky top-0 bg-white pt-1 pb-4 z-10">Analysis Results</h2>
             
             {isAnalyzing ? (
@@ -331,7 +625,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mt-16 py-8 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
+      <footer className="mt-16 md:mt-4 py-8 md:py-4 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-500">PFISH CRE AI DEAL FINDER &copy; {new Date().getFullYear()}</p>
           <p className="mt-2 text-sm text-gray-400">Powered by OpenAI and Next.js</p>

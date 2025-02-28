@@ -12,6 +12,7 @@ A modern React-based frontend for the CRE Deal Finder tool, optimized for deploy
 - **Model Cascade System**: Automatically tries multiple OpenAI models (o1 → o1-mini → GPT-3.5-Turbo)
 - **Robust Error Handling**: Comprehensive error management with fallbacks
 - **JSON Parsing**: Automatic cleanup of AI-generated JSON responses
+- **Enhanced UI**: Improved PropertyForm with better validation and tooltips (v1.6.1)
 
 ## Getting Started
 

@@ -1,7 +1,7 @@
 # PFISH CRE AI DEAL FINDER
 
 ![Project Status](https://img.shields.io/badge/status-beta-yellow)
-![Version](https://img.shields.io/badge/version-1.6.0-blue)
+![Version](https://img.shields.io/badge/version-1.6.1-blue)
 ![OpenAI](https://img.shields.io/badge/OpenAI-o1%20%7C%20o1--mini%20%7C%20GPT--3.5--turbo-green)
 ![UI](https://img.shields.io/badge/UI-Chakra%20UI-teal)
 
@@ -277,7 +277,14 @@ The tool evaluates listings based on three main categories:
 
 ## Version History
 
-### v1.6.0 (Current)
+### v1.6.1 (Current)
+- Updated PropertyForm component with improved validation and user experience
+- Enhanced index page with additional UI elements and tooltips
+- Added new icons for better visual guidance
+- Fixed minor UI issues and improved responsiveness
+- Maintained all existing functionality with a more polished interface
+
+### v1.6.0
 - Upgraded UI from Tailwind CSS to Chakra UI for improved component consistency
 - Added custom theme with branded color palette
 - Enhanced component styling with Chakra's built-in responsive design
@@ -458,4 +465,3 @@ cre-deal-finder/
 ├── requirements.txt            # Python dependencies
 ├── .env.example                # Example environment variables
 └── README.md                   # Main documentation
-```
