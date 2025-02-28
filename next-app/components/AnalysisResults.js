@@ -3,6 +3,21 @@ import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/cjs/languages/hljs/json';
 import { docco } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
+import {
+  Box,
+  Button,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+  Badge,
+  useColorModeValue,
+  Collapse,
+  Divider,
+  SimpleGrid,
+  Stack,
+  Icon
+} from '@chakra-ui/react';
 
 SyntaxHighlighter.registerLanguage('json', json);
 
@@ -54,17 +69,59 @@ function extractKeywordsFromText(text) {
   return foundKeywords;
 }
 
-function ScoreCard({ title, score = 0, className }) {
+function ScoreCard({ title, score = 0, className = '' }) {
   // Default to 0 if score is undefined
   const safeScore = typeof score === 'number' ? score : 0;
-  const scoreClass = safeScore >= 7 ? 'score-high' : safeScore >= 4 ? 'score-medium' : 'score-low';
+  
+  // Determine color scheme based on score
+  let colorScheme;
+  if (safeScore >= 7) {
+    colorScheme = {
+      bg: 'green.50',
+      border: 'green.200',
+      text: 'green.800'
+    };
+  } else if (safeScore >= 4) {
+    colorScheme = {
+      bg: 'yellow.50',
+      border: 'yellow.200',
+      text: 'yellow.800'
+    };
+  } else {
+    colorScheme = {
+      bg: 'red.50',
+      border: 'red.200',
+      text: 'red.800'
+    };
+  }
+  
+  // Determine styling based on className
+  const isHighlighted = className.includes('border-primary-100');
+  const hasShadow = className.includes('shadow');
   
   return (
-    <div className={`score-card ${scoreClass} ${className}`}>
-      <h3 className="text-xs sm:text-sm font-medium mb-1 truncate">{title}</h3>
-      <p className="text-2xl sm:text-3xl font-semibold">{safeScore.toFixed(1)}</p>
-      <p className="text-xs mt-1 text-gray-500 font-medium">out of 10</p>
-    </div>
+    <Box
+      p={5}
+      bg={colorScheme.bg}
+      borderRadius="2xl"
+      textAlign="center"
+      transition="all 0.2s"
+      backdropFilter="blur(4px)"
+      boxShadow={hasShadow ? 'md' : 'sm'}
+      borderWidth={isHighlighted ? "2px" : "1px"}
+      borderStyle="solid"
+      borderColor={isHighlighted ? "primary.100" : colorScheme.border}
+    >
+      <Text fontSize={{ base: 'xs', sm: 'sm' }} fontWeight="medium" mb={1} isTruncated>
+        {title}
+      </Text>
+      <Text fontSize={{ base: '2xl', sm: '3xl' }} fontWeight="semibold" color={colorScheme.text}>
+        {safeScore.toFixed(1)}
+      </Text>
+      <Text fontSize="xs" mt={1} color="gray.500" fontWeight="medium">
+        out of 10
+      </Text>
+    </Box>
   );
 }
 
@@ -72,45 +129,73 @@ function ExpandableSection({ title, content, keywords = [] }) {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
-    <div className="border border-gray-200 rounded-xl mb-4 overflow-hidden bg-white shadow-sm">
-      <button
-        className="w-full p-3 sm:p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
+    <Box 
+      mb={4} 
+      borderWidth="1px" 
+      borderColor="gray.200" 
+      borderRadius="xl" 
+      overflow="hidden" 
+      bg="white" 
+      boxShadow="sm"
+    >
+      <Button
+        width="full"
+        p={{ base: 3, sm: 4 }}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        bg="gray.50"
+        _hover={{ bg: "gray.100" }}
+        transition="colors 0.2s"
         onClick={() => setIsExpanded(!isExpanded)}
+        variant="ghost"
+        borderRadius="0"
       >
-        <h3 className="text-base sm:text-lg font-medium text-gray-800">{title}</h3>
-        {isExpanded ? (
-          <ChevronUpIcon className="h-5 w-5 text-gray-500" />
-        ) : (
-          <ChevronDownIcon className="h-5 w-5 text-gray-500" />
-        )}
-      </button>
+        <Text fontSize={{ base: 'md', sm: 'lg' }} fontWeight="medium" color="gray.800" textAlign="left">
+          {title}
+        </Text>
+        <Icon 
+          as={isExpanded ? ChevronUpIcon : ChevronDownIcon} 
+          boxSize={5} 
+          color="gray.500" 
+        />
+      </Button>
       
-      {isExpanded && (
-        <div className="p-3 sm:p-5">
-          <p className="text-gray-700 mb-4 leading-relaxed">{content}</p>
+      <Collapse in={isExpanded} animateOpacity>
+        <Box p={{ base: 3, sm: 5 }}>
+          <Text color="gray.700" mb={4} lineHeight="relaxed">
+            {content}
+          </Text>
           
           {keywords && keywords.length > 0 ? (
-            <div>
-              <h4 className="font-medium text-gray-800 mb-2">Keywords Detected:</h4>
-              <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
+            <Box>
+              <Text fontWeight="medium" color="gray.800" mb={2}>
+                Keywords Detected:
+              </Text>
+              <Flex flexWrap="wrap" gap={2} overflowX="auto" pb={2}>
                 {keywords.map((keyword, index) => (
-                  <span 
-                    key={index} 
-                    className="px-3 py-1 bg-primary-50 text-primary-600 text-sm rounded-full"
+                  <Badge
+                    key={index}
+                    px={3}
+                    py={1}
+                    bg="primary.50"
+                    color="primary.600"
+                    fontSize="sm"
+                    borderRadius="full"
                   >
                     {keyword}
-                  </span>
+                  </Badge>
                 ))}
-              </div>
-            </div>
+              </Flex>
+            </Box>
           ) : (
-            <div className="text-gray-500 italic">
+            <Text color="gray.500" fontStyle="italic">
               No relevant keywords detected for this category.
-            </div>
+            </Text>
           )}
-        </div>
-      )}
-    </div>
+        </Box>
+      </Collapse>
+    </Box>
   );
 }
 
@@ -297,34 +382,59 @@ export default function AnalysisResults({ results }) {
   };
   
   return (
-    <div>
+    <Box>
       {property && (
-        <div className="mb-6">
-          <h3 className="text-lg sm:text-xl font-medium mb-3 text-gray-900">{property.name || 'Unnamed Property'}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-            <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Type:</span> <span className="text-gray-600">{property.property_type || 'N/A'}</span></div>
-            <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Location:</span> <span className="text-gray-600">{property.location || 'N/A'}</span></div>
-            <div className="p-3 bg-gray-50 rounded-lg"><span className="font-medium text-gray-700">Price:</span> <span className="text-gray-600">{property.price || 'N/A'}</span></div>
-          </div>
-        </div>
+        <Box mb={6}>
+          <Heading as="h3" fontSize={{ base: "lg", sm: "xl" }} fontWeight="medium" mb={3} color="gray.900">
+            {property.name || 'Unnamed Property'}
+          </Heading>
+          <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3} fontSize="sm">
+            <Box p={3} bg="gray.50" borderRadius="lg">
+              <Text as="span" fontWeight="medium" color="gray.700">Type: </Text>
+              <Text as="span" color="gray.600">{property.property_type || 'N/A'}</Text>
+            </Box>
+            <Box p={3} bg="gray.50" borderRadius="lg">
+              <Text as="span" fontWeight="medium" color="gray.700">Location: </Text>
+              <Text as="span" color="gray.600">{property.location || 'N/A'}</Text>
+            </Box>
+            <Box p={3} bg="gray.50" borderRadius="lg">
+              <Text as="span" fontWeight="medium" color="gray.700">Price: </Text>
+              <Text as="span" color="gray.600">{property.price || 'N/A'}</Text>
+            </Box>
+          </SimpleGrid>
+        </Box>
       )}
       
       {model_used && (
-        <div className="mb-6 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-sm">
-          <p>
-            <span className="font-semibold">AI Model Used:</span> {model_used}
-          </p>
+        <Box 
+          mb={6} 
+          px={4} 
+          py={3} 
+          bg="blue.50" 
+          borderWidth="1px" 
+          borderColor="blue.100" 
+          borderRadius="xl" 
+          color="blue.700" 
+          fontSize="sm"
+        >
+          <Text>
+            <Text as="span" fontWeight="semibold">AI Model Used: </Text>
+            {model_used}
+          </Text>
           {models_attempted && models_attempted.length > 0 && (
-            <p className="mt-1">
-              <span className="font-semibold">Models Attempted:</span> {models_attempted.join(' → ')}
-            </p>
+            <Text mt={1}>
+              <Text as="span" fontWeight="semibold">Models Attempted: </Text>
+              {models_attempted.join(' → ')}
+            </Text>
           )}
-        </div>
+        </Box>
       )}
       
-      <div className="mb-8">
-        <h3 className="text-lg sm:text-xl font-medium mb-4 text-gray-900">Scores</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <Box mb={8}>
+        <Heading as="h3" fontSize={{ base: "lg", sm: "xl" }} fontWeight="medium" mb={4} color="gray.900">
+          Scores
+        </Heading>
+        <Grid templateColumns={{ base: "repeat(2, 1fr)" }} gap={4} maxW="100%" overflow="hidden">
           <ScoreCard 
             title="Seller Motivation" 
             score={analysis.seller_motivation_score} 
@@ -342,11 +452,13 @@ export default function AnalysisResults({ results }) {
             score={analysis.total_score} 
             className="shadow border-2 border-primary-100" 
           />
-        </div>
-      </div>
+        </Grid>
+      </Box>
       
-      <div className="mb-8">
-        <h3 className="text-lg sm:text-xl font-medium mb-4 text-gray-900">Detailed Analysis</h3>
+      <Box mb={8}>
+        <Heading as="h3" fontSize={{ base: "lg", sm: "xl" }} fontWeight="medium" mb={4} color="gray.900">
+          Detailed Analysis
+        </Heading>
         
         <ExpandableSection 
           title="Seller Motivation" 
@@ -368,39 +480,44 @@ export default function AnalysisResults({ results }) {
                   "The property characteristics score evaluates location quality, building condition, tenant mix, and potential for value-add improvements."}
           keywords={analysis.property_characteristics_analysis?.keywords || []}
         />
-      </div>
+      </Box>
       
       {analysis.summary && (
-        <div className="mb-8">
-          <h3 className="text-lg sm:text-xl font-medium mb-4 text-gray-900">Investment Recommendation</h3>
-          <div className="p-5 bg-primary-50 border border-primary-100 rounded-xl">
-            <p className="text-gray-800 leading-relaxed">{analysis.summary}</p>
-          </div>
-        </div>
+        <Box mb={8}>
+          <Heading as="h3" fontSize={{ base: "lg", sm: "xl" }} fontWeight="medium" mb={4} color="gray.900">
+            Investment Recommendation
+          </Heading>
+          <Box p={5} bg="primary.50" borderWidth="1px" borderColor="primary.100" borderRadius="xl">
+            <Text color="gray.800" lineHeight="relaxed">{analysis.summary}</Text>
+          </Box>
+        </Box>
       )}
       
-      <div className="flex justify-center">
-        <button
-          type="button"
-          className="btn btn-secondary text-sm flex items-center"
+      <Flex justify="center">
+        <Button
+          variant="outline"
+          size="sm"
+          display="flex"
+          alignItems="center"
           onClick={() => setShowRawJson(!showRawJson)}
+          colorScheme="gray"
         >
           {showRawJson ? 'Hide' : 'Show'} Raw JSON
-          {showRawJson ? (
-            <ChevronUpIcon className="h-4 w-4 ml-1" />
-          ) : (
-            <ChevronDownIcon className="h-4 w-4 ml-1" />
-          )}
-        </button>
-      </div>
+          <Icon 
+            as={showRawJson ? ChevronUpIcon : ChevronDownIcon} 
+            boxSize={4} 
+            ml={1} 
+          />
+        </Button>
+      </Flex>
       
       {showRawJson && (
-        <div className="mt-4 border rounded-xl overflow-hidden">
+        <Box mt={4} borderWidth="1px" borderRadius="xl" overflow="hidden">
           <SyntaxHighlighter language="json" style={docco} customStyle={{ margin: 0, borderRadius: '0.75rem' }}>
             {JSON.stringify(analysis, null, 2)}
           </SyntaxHighlighter>
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }

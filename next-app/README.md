@@ -5,7 +5,7 @@ A modern React-based frontend for the CRE Deal Finder tool, optimized for deploy
 ## Features
 
 - **React Components**: Modern, responsive UI built with React and Next.js
-- **Tailwind CSS**: Clean, customizable styling
+- **Chakra UI**: Polished, accessible component library with custom theming
 - **API Routes**: Serverless functions for OpenAI integration
 - **Responsive Design**: Works on mobile, tablet, and desktop
 - **Optimized for Vercel**: Ready for one-click deployment
@@ -41,7 +41,35 @@ Vercel will automatically detect the Next.js project and configure all necessary
 
 ## Configuration
 
-### OpenAI Models
+#### Chakra UI Theme
+
+The application uses a custom Chakra UI theme with branded colors:
+
+```js
+// In /theme.js
+import { extendTheme } from '@chakra-ui/react';
+
+const theme = extendTheme({
+  colors: {
+    primary: {
+      50: '#f0f7ff',
+      100: '#e0eefe',
+      200: '#bae0fd',
+      300: '#7cc8fb',
+      400: '#36aaf4',
+      500: '#0d96e6',
+      600: '#0077c2',
+      700: '#015fa0',
+      800: '#065285',
+      900: '#08426e',
+    }
+  }
+});
+
+export default theme;
+```
+
+#### OpenAI Models
 
 The application supports multiple OpenAI models with model-specific parameter handling:
 

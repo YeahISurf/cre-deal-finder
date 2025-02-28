@@ -1,8 +1,9 @@
 # PFISH CRE AI DEAL FINDER
 
 ![Project Status](https://img.shields.io/badge/status-beta-yellow)
-![Version](https://img.shields.io/badge/version-1.5.0-blue)
+![Version](https://img.shields.io/badge/version-1.6.0-blue)
 ![OpenAI](https://img.shields.io/badge/OpenAI-o1%20%7C%20o1--mini%20%7C%20GPT--3.5--turbo-green)
+![UI](https://img.shields.io/badge/UI-Chakra%20UI-teal)
 
 Premium AI-powered analysis of commercial real estate listings to identify investment opportunities based on seller motivation, transaction complexity, and property characteristics.
 
@@ -153,7 +154,7 @@ npm run dev
 
 - **Frontend**: 
   - React with Next.js for server-side rendering
-  - TailwindCSS for responsive styling
+  - Chakra UI component library for a polished, accessible interface
   - Component-based architecture for maintainability
 
 - **API Integration**: 
@@ -166,7 +167,7 @@ npm run dev
   - Context API for shared state (when needed)
 
 - **Styling**: 
-  - TailwindCSS with custom components
+  - Chakra UI with custom theme
   - Responsive design for all device sizes
   - Apple-inspired premium UI
 
@@ -276,7 +277,14 @@ The tool evaluates listings based on three main categories:
 
 ## Version History
 
-### v1.5.0 (Current)
+### v1.6.0 (Current)
+- Upgraded UI from Tailwind CSS to Chakra UI for improved component consistency
+- Added custom theme with branded color palette
+- Enhanced component styling with Chakra's built-in responsive design
+- Improved accessibility with Chakra UI's accessible components
+- Maintained all existing functionality with a more polished interface
+
+### v1.5.0
 - Enhanced API endpoint with improved error handling
 - Better JSON parsing for all models
 - New API endpoint testing utility
@@ -323,11 +331,10 @@ The tool evaluates listings based on three main categories:
 
 ## Future Roadmap
 
-### v1.6.0 (Planned)
+### v1.7.0 (Planned)
 - Add support for multiple property analysis in batch mode
 - Implement property comparison features
 - Add data persistence (save analyses to local storage)
-- Enhance mobile responsiveness
 - Add export functionality (PDF, CSV)
 
 ### v2.0.0 (Planned)

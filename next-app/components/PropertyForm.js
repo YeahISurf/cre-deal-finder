@@ -1,4 +1,17 @@
 import { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Flex,
+  FormControl,
+  FormLabel,
+  Grid,
+  Input,
+  Textarea,
+  Text,
+  useColorModeValue,
+  Spinner
+} from '@chakra-ui/react';
 
 const SAMPLE_PROPERTY = {
   name: 'Retail Strip Center',
@@ -70,122 +83,173 @@ export default function PropertyForm({ onSubmit, isSubmitting }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <div className="flex border rounded-xl overflow-hidden shadow-sm">
-          <button
-            type="button"
-            className={`flex-1 py-3 transition-colors ${formType === 'manual' ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-sm' : 'bg-gray-50 hover:bg-gray-100'}`}
+      <Box mb={6}>
+        <Flex 
+          border="1px" 
+          borderColor="gray.200" 
+          borderRadius="xl" 
+          overflow="hidden" 
+          boxShadow="sm"
+        >
+          <Button
+            flex="1"
+            py={3}
+            borderRadius="0"
+            variant="ghost"
+            bg={formType === 'manual' ? 'primary.500' : 'gray.50'}
+            color={formType === 'manual' ? 'white' : 'gray.800'}
+            _hover={{
+              bg: formType === 'manual' ? 'primary.400' : 'gray.100'
+            }}
             onClick={() => setFormType('manual')}
           >
             Enter Manually
-          </button>
-          <button
-            type="button"
-            className={`flex-1 py-3 transition-colors ${formType === 'sample' ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-sm' : 'bg-gray-50 hover:bg-gray-100'}`}
+          </Button>
+          <Button
+            flex="1"
+            py={3}
+            borderRadius="0"
+            variant="ghost"
+            bg={formType === 'sample' ? 'primary.500' : 'gray.50'}
+            color={formType === 'sample' ? 'white' : 'gray.800'}
+            _hover={{
+              bg: formType === 'sample' ? 'primary.400' : 'gray.100'
+            }}
             onClick={() => setFormType('sample')}
           >
             Use Sample
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Flex>
+      </Box>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+      <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={4} mb={6}>
+        <FormControl>
+          <FormLabel htmlFor="name" fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
             Property Name
-          </label>
-          <input
-            type="text"
+          </FormLabel>
+          <Input
             id="name"
             name="name"
             value={property.name}
             onChange={handleInputChange}
             placeholder="Office Building"
-            className="form-input"
+            size="md"
+            borderRadius="xl"
+            borderColor="gray.300"
+            _focus={{
+              borderColor: "primary.400",
+              boxShadow: "0 0 0 1px var(--chakra-colors-primary-400)"
+            }}
           />
-        </div>
-        <div>
-          <label htmlFor="property_type" className="block text-sm font-medium text-gray-700 mb-2">
+        </FormControl>
+        <FormControl>
+          <FormLabel htmlFor="property_type" fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
             Property Type
-          </label>
-          <input
-            type="text"
+          </FormLabel>
+          <Input
             id="property_type"
             name="property_type"
             value={property.property_type}
             onChange={handleInputChange}
             placeholder="Office, Retail, Industrial, etc."
-            className="form-input"
+            size="md"
+            borderRadius="xl"
+            borderColor="gray.300"
+            _focus={{
+              borderColor: "primary.400",
+              boxShadow: "0 0 0 1px var(--chakra-colors-primary-400)"
+            }}
           />
-        </div>
-      </div>
+        </FormControl>
+      </Grid>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+      <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={4} mb={6}>
+        <FormControl>
+          <FormLabel htmlFor="location" fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
             Location
-          </label>
-          <input
-            type="text"
+          </FormLabel>
+          <Input
             id="location"
             name="location"
             value={property.location}
             onChange={handleInputChange}
             placeholder="City, State"
-            className="form-input"
+            size="md"
+            borderRadius="xl"
+            borderColor="gray.300"
+            _focus={{
+              borderColor: "primary.400",
+              boxShadow: "0 0 0 1px var(--chakra-colors-primary-400)"
+            }}
           />
-        </div>
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+        </FormControl>
+        <FormControl>
+          <FormLabel htmlFor="price" fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
             Price
-          </label>
-          <input
-            type="text"
+          </FormLabel>
+          <Input
             id="price"
             name="price"
             value={property.price}
             onChange={handleInputChange}
             placeholder="$1,000,000"
-            className="form-input"
+            size="md"
+            borderRadius="xl"
+            borderColor="gray.300"
+            _focus={{
+              borderColor: "primary.400",
+              boxShadow: "0 0 0 1px var(--chakra-colors-primary-400)"
+            }}
           />
-        </div>
-      </div>
+        </FormControl>
+      </Grid>
 
-      <div className="mb-6">
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+      <FormControl mb={6}>
+        <FormLabel htmlFor="description" fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
           Property Description
-        </label>
-        <textarea
+        </FormLabel>
+        <Textarea
           id="description"
           name="description"
           value={property.description}
           onChange={handleInputChange}
           rows={10}
           placeholder="Paste the full property listing description here..."
-          className="form-input font-light"
-        ></textarea>
-      </div>
+          fontWeight="light"
+          size="md"
+          borderRadius="xl"
+          borderColor="gray.300"
+          _focus={{
+            borderColor: "primary.400",
+            boxShadow: "0 0 0 1px var(--chakra-colors-primary-400)"
+          }}
+        />
+      </FormControl>
 
-      <button
+      <Button
         type="submit"
-        className="btn btn-primary w-full"
-        disabled={isSubmitting}
+        width="full"
+        bg="primary.500"
+        _hover={{ bg: "primary.400" }}
+        _active={{ bg: "primary.600" }}
+        color="white"
+        fontWeight="medium"
+        borderRadius="xl"
+        py={3}
+        isDisabled={isSubmitting}
       >
         {isSubmitting ? (
-          <div className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Analyzing...
-          </div>
+          <Flex align="center" justify="center">
+            <Spinner size="sm" color="white" mr={3} />
+            <Text>Analyzing...</Text>
+          </Flex>
         ) : 'Analyze Property'}
-      </button>
+      </Button>
       
       {!isSubmitting && (
-        <p className="mt-3 text-sm text-center text-gray-500">
+        <Text mt={3} fontSize="sm" textAlign="center" color="gray.500">
           Analysis runs the property through multiple AI models for optimal results
-        </p>
+        </Text>
       )}
     </form>
   );
