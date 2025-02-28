@@ -36,6 +36,7 @@ export default function Home() {
   const [skipAPI, setSkipAPI] = useState(false);
   const [debugInfo, setDebugInfo] = useState(null);
   const [rawResponse, setRawResponse] = useState('');
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const handleAnalysis = async (propertyData) => {
     if (!apiKey && !skipAPI) {
@@ -215,29 +216,9 @@ export default function Home() {
             <h2 className="text-xl sm:text-2xl font-medium mb-6 text-gray-900">Property Analysis</h2>
             
             <div className="mb-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
-                <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-2">
-                  OpenAI API Key
-                </label>
-                <div className="flex items-center mt-2 sm:mt-0">
-                  <label htmlFor="skipAPI" className="block text-sm font-medium text-gray-700 mr-2">
-                    Use Sample Analysis
-                  </label>
-                  <div className="relative inline-block h-6 w-12 cursor-pointer rounded-full bg-gray-200 transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2">
-                    <input 
-                      type="checkbox" 
-                      id="skipAPI" 
-                      className="sr-only" 
-                      checked={skipAPI} 
-                      onChange={(e) => setSkipAPI(e.target.checked)} 
-                    />
-                    <span 
-                      aria-hidden="true" 
-                      className={`${skipAPI ? 'translate-x-6 bg-primary-500' : 'translate-x-0 bg-white'} pointer-events-none inline-block h-6 w-6 transform rounded-full shadow ring-0 transition ease-in-out duration-200 border`} 
-                    />
-                  </div>
-                </div>
-              </div>
+              <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-2">
+                OpenAI API Key
+              </label>
               
               <input
                 type="password"
@@ -270,9 +251,31 @@ export default function Home() {
               </div>
             )}
             
-            {/* Debug Information Section */}
+            {/* Debug Information Toggle */}
             {(debugInfo || rawResponse) && (
-              <div className="mt-6 p-4 bg-gray-100 border border-gray-300 text-gray-800 rounded-xl">
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowDebugInfo(!showDebugInfo)}
+                  className="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md flex items-center"
+                >
+                  {showDebugInfo ? 'Hide' : 'Show'} Debug Information
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-4 w-4 ml-1 transition-transform ${showDebugInfo ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            
+            {/* Debug Information Section */}
+            {(debugInfo || rawResponse) && showDebugInfo && (
+              <div className="mt-2 p-4 bg-gray-100 border border-gray-300 text-gray-800 rounded-xl">
                 <h3 className="font-bold text-lg mb-2">Debug Information:</h3>
                 
                 {debugInfo && (
