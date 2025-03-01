@@ -23,13 +23,6 @@
       ]
     }
   ],
-  "functions": {
-    "api/analyze.js": {
-      "memory": 1024,
-      "maxDuration": 60,
-      "includeFiles": ".env"
-    }
-  },
   "env": {
     "OPENAI_API_KEY": "OPENAI_API_KEY"
   }
