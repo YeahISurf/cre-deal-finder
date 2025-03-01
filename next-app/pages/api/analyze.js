@@ -26,13 +26,15 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { apiKey, property, forceModel } = req.body;
+    const { property, forceModel } = req.body;
+    // Use environment variable for API key
+    const apiKey = process.env.OPENAI_API_KEY;
 
     // Validate request data
     if (!apiKey) {
-      console.log('Missing API key');
+      console.log('Missing API key in environment variables');
       clearTimeout(timeoutId);
-      return res.status(400).json({ error: 'OpenAI API key is required' });
+      return res.status(500).json({ error: 'Server configuration error: OpenAI API key not found' });
     }
 
     if (!property || !property.description) {

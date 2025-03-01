@@ -3,5 +3,47 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/analyze.js": {
+      "memory": 1024,
+      "maxDuration": 60,
+      "includeFiles": ".env",
+      "maxConcurrentRequests": 100
+    }
+  },
+  "env": {
+    "OPENAI_API_KEY": "OPENAI_API_KEY"
+  },
+  "routes": [
+    {
+      "source": "/api/analyze",
+      "destination": "/api/analyze.js",
+      "methods": ["POST"],
+      "rateLimit": {
+        "windowMs": 60000,
+        "max": 100,
+        "message": "Too many requests from this IP, please try again after a minute"
+      }
+    }
+  ]
 }

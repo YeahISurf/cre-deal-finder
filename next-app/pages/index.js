@@ -51,7 +51,6 @@ const FALLBACK_ANALYSIS = {
 };
 
 export default function Home() {
-  const [apiKey, setApiKey] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
@@ -78,11 +77,6 @@ export default function Home() {
   }, [isAnalyzing, results]);
 
   const handleAnalysis = async (propertyData) => {
-    if (!apiKey && !skipAPI) {
-      setError('Please enter your OpenAI API key or use Sample Analysis mode');
-      return;
-    }
-
     if (!propertyData.description || propertyData.description.trim() === '') {
       setError('Please enter a property description');
       return;
@@ -122,7 +116,6 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey,
           property: propertyData
         }),
       });
@@ -246,25 +239,9 @@ export default function Home() {
         </div>
         
         <div className="flex flex-col items-center mb-6">
-          <p className="text-center text-gray-600 mb-4 max-w-2xl mx-auto text-base sm:text-lg px-2">
-            Premium AI-powered analysis of commercial real estate listings to identify investment opportunities
-            based on seller motivation, transaction complexity, and property characteristics.
+          <p className="text-center text-gray-600 mb-4 max-w-4xl mx-auto text-base sm:text-lg px-2 md:px-8">
+            Premium AI-powered analysis of commercial real estate listings to identify investment opportunities based on seller motivation, transaction complexity, and property characteristics.
           </p>
-          
-          <Button
-            onClick={onOpen}
-            size="md"
-            colorScheme="primary"
-            variant="outline"
-            borderRadius="xl"
-            boxShadow="sm"
-            _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
-            _active={{ boxShadow: "inner" }}
-            leftIcon={<QuestionMarkCircleIcon className="h-5 w-5" />}
-            transition="all 0.2s"
-          >
-            How to Use This Tool
-          </Button>
         </div>
         
         <Modal isOpen={isOpen} onClose={onClose} size="2xl" motionPreset="slideInBottom">
@@ -309,34 +286,6 @@ export default function Home() {
                           1
                         </Box>
                         <Box>
-                          <Heading size="sm" mb={1} color="gray.800">Enter Your OpenAI API Key</Heading>
-                          <Text color="gray.600" fontSize="sm" lineHeight="tall">
-                            Paste your OpenAI API key in the field. Not stored on our servers.
-                          </Text>
-                          <Badge colorScheme="blue" mt={2} fontSize="xs">Required for AI Analysis</Badge>
-                        </Box>
-                      </Flex>
-                    </ListItem>
-                    
-                    <ListItem>
-                      <Flex>
-                        <Box 
-                          as="span" 
-                          bg="primary.500" 
-                          color="white" 
-                          borderRadius="full" 
-                          w={8} 
-                          h={8} 
-                          display="flex" 
-                          alignItems="center" 
-                          justifyContent="center" 
-                          fontWeight="bold"
-                          mr={3}
-                          flexShrink={0}
-                        >
-                          2
-                        </Box>
-                        <Box>
                           <Heading size="sm" mb={1} color="gray.800">Choose Input Method</Heading>
                           <Text color="gray.600" fontSize="sm" lineHeight="tall">
                             Select "Enter Manually" or "Use Sample" for pre-configured examples.
@@ -365,7 +314,7 @@ export default function Home() {
                           mr={3}
                           flexShrink={0}
                         >
-                          3
+                          2
                         </Box>
                         <Box>
                           <Heading size="sm" mb={1} color="gray.800">Enter Property Details</Heading>
@@ -400,7 +349,7 @@ export default function Home() {
                           mr={3}
                           flexShrink={0}
                         >
-                          4
+                          3
                         </Box>
                         <Box>
                           <Heading size="sm" mb={1} color="gray.800">Analyze the Property</Heading>
@@ -427,7 +376,7 @@ export default function Home() {
                           mr={3}
                           flexShrink={0}
                         >
-                          5
+                          4
                         </Box>
                         <Box>
                           <Heading size="sm" mb={1} color="gray.800">Interpret Results</Heading>
@@ -507,33 +456,22 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto md:flex-grow md:flex md:overflow-hidden">
           <div className="card md:overflow-y-auto md:flex-1">
-            <h2 className="text-xl sm:text-2xl font-medium mb-6 text-gray-900">Property Analysis</h2>
-            
-            <div className="mb-6">
-              <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-2">
-                OpenAI API Key
-              </label>
-              
-              <input
-                type="password"
-                id="apiKey"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="form-input"
-                disabled={skipAPI}
-              />
-              
-              {skipAPI ? (
-                <p className="mt-2 text-sm text-gray-500">
-                  Using sample analysis mode - no API key required.
-                </p>
-              ) : (
-                <p className="mt-2 text-sm text-gray-500">
-                  Your API key is only used for this session and is not stored on our servers. 
-                  The system uses a cascade of o1 → o1-mini → GPT-3.5-Turbo models.
-                </p>
-              )}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl sm:text-2xl font-medium text-gray-900">Property Analysis</h2>
+              <Button
+                onClick={onOpen}
+                size="md"
+                colorScheme="primary"
+                variant="outline"
+                borderRadius="xl"
+                boxShadow="sm"
+                _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
+                _active={{ boxShadow: "inner" }}
+                leftIcon={<QuestionMarkCircleIcon className="h-5 w-5" />}
+                transition="all 0.2s"
+              >
+                How to Use This Tool
+              </Button>
             </div>
 
             <PropertyForm onSubmit={handleAnalysis} isSubmitting={isAnalyzing} />
@@ -625,8 +563,8 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mt-16 md:mt-4 py-8 md:py-4 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 text-center">
+      <footer className="mt-16 md:mt-4 py-8 md:py-6 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 text-center pb-6">
           <p className="text-gray-500">PFISH CRE AI DEAL FINDER &copy; {new Date().getFullYear()}</p>
           <p className="mt-2 text-sm text-gray-400">Powered by OpenAI and Next.js</p>
         </div>
