@@ -27,23 +27,10 @@
     "api/analyze.js": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": ".env",
-      "maxConcurrentRequests": 100
+      "includeFiles": ".env"
     }
   },
   "env": {
     "OPENAI_API_KEY": "OPENAI_API_KEY"
-  },
-  "routes": [
-    {
-      "source": "/api/analyze",
-      "destination": "/api/analyze.js",
-      "methods": ["POST"],
-      "rateLimit": {
-        "windowMs": 60000,
-        "max": 100,
-        "message": "Too many requests from this IP, please try again after a minute"
-      }
-    }
-  ]
+  }
 }
